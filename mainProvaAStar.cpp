@@ -10,10 +10,11 @@ int main() {
         {254, 254, 254, 254, 254}
     };
 
-    std::pair<int,int> start = {0,0};
-    std::pair<int,int> goal = {4,4};
+    Point inici{0,0};
+    Point fi{4,4};
 
-    auto path = aStar(mapa, start, goal);
+    auto result  = aStar(mapa, inici, fi);
+    vector<Point> path = result.first;
 
     if (!path.empty()) {
         std::cout << "Ruta trobada:\n";

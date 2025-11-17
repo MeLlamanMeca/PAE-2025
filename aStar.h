@@ -3,10 +3,13 @@
 
 #include <vector>
 #include <utility>
+#include "./assignTasksToRobots/point/point.hpp"
 using namespace std;
 
-vector<pair<int, int>> aStar(const vector<vector<int>>& matriz,
-                                 pair<int, int> inicio,
-                                 pair<int, int> fin);
+pair<vector<Point>, int> aStar(
+    const vector<vector<int>>& matrix,
+    Point inici,
+    Point fi
+);
 
 #endif
