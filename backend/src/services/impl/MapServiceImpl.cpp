@@ -2,7 +2,7 @@
 //privates
 
 TaskAssignation taskAssigner(Map& map, Task& task) {
- return TaskAssignation(1, 1); // Update arguments to match the constructor
+    throw std::logic_error("Not implemented");
 }
 
 

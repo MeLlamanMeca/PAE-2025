@@ -1,6 +1,10 @@
 #include "Map.h"
 #include <stdexcept>
 
+Route Map::aStar(const std::vector<std::vector<char>>& map, Point ini, Point fin) {
+    throw std::logic_error("aStar not yet implemented.");
+}
+
 // ---------------- GETTERS ----------------
 
 const std::vector<std::vector<char>>& Map::getMap() const {
@@ -20,12 +24,12 @@ Robot& Map::getRobot(int robotID) {
     if (it != robots.end()) 
         return it->second.get();
 
-    throw std::out_of_range("Robot with the given ID does not exist.");
+    throw std::out_of_range("Robot with the given ID is not in map.");
 }
 
 // ---------------- DISTANCE ----------------
 
-float Map::getDistance(Point a, Point b) {
+int Map::getDistance(Point a, Point b) {
     if (a == b) return 0;
 
     std::pair<Point, Point> key =
@@ -35,7 +39,11 @@ float Map::getDistance(Point a, Point b) {
     if (it != distanceMap.end())
         return it->second;
 
-    return 1.0f; // TODO: implementar A*
+    else {
+        int cost = Map::aStar(this->map, key.first, key.second).getCost();
+        distanceMap.emplace(key, cost);
+        return cost;
+    }
 }
 
 // ---------------- ADD / REMOVE ----------------
@@ -76,5 +84,8 @@ void Map::createCommonZone(Point tl, Point br) {
 
 TaskData startTask(Point start, Point end, Point robotPos) {
     // TODO
+    //crear mapa temporal con caminos de robots
+    //llamar a aStar(mapatemporal, robotPos, iniPos)
+    //llamar a aStar(mapatemporal, iniPos, endPos)
     throw std::logic_error("startTask not yet implemented.");
 }

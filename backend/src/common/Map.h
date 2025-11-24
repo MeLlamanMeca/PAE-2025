@@ -16,7 +16,9 @@ private:
     std::vector<std::vector<char>> map;
     std::unordered_map<int, std::reference_wrapper<POI>> pointsOfInterest;
     std::unordered_map<int, std::reference_wrapper<Robot>> robots;
-    std::unordered_map<std::pair<Point, Point>, float, PointPairHash> distanceMap;
+    std::unordered_map<std::pair<Point, Point>, int, PointPairHash> distanceMap;
+
+    static Route aStar(const std::vector<std::vector<char>>& map, Point ini, Point fin);
 
 public:
     Map(std::vector<std::vector<char>> map) : map(std::move(map)) {}
@@ -26,7 +28,7 @@ public:
     const std::unordered_map<int, std::reference_wrapper<Robot>>& getRobots() const;
     Robot& getRobot(int robotID);
 
-    float getDistance(Point a, Point b);
+    int getDistance(Point a, Point b);
 
     void addRobot(Robot& r);
     void deleteRobot(int robotID);
