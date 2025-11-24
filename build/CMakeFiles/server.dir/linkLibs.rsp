@@ -1,1 +1,0 @@
- third_party/IXWebSocket/libixwebsocket.a C:/msys64/mingw64/lib/libz.dll.a -lwsock32 -lws2_32 -lshlwapi -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

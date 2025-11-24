@@ -1,8 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"C:/Users/alexk/Documents/github/PAE-2025/build/cmake_install.cmake",
-		"C:/Users/alexk/Documents/github/PAE-2025/build/third_party/IXWebSocket/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
