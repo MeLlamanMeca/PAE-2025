@@ -1,82 +1,95 @@
 <template>
-  <div id="app" class="font-sans p-5">
-    <h1 class="text-center text-gray-800 mb-5">SARA - Robot Management System</h1>
-    
-    <div class="text-center mb-5">
-      <span :class="[
-        'inline-block px-4 py-2 rounded-full font-bold text-sm',
-        connected ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-      ]">
-        {{ connected ? '🟢 Conectado' : '🔴 Desconectado' }}
-      </span>
-    </div>
-
-    <div class="flex gap-8 justify-center flex-wrap">
-      <!-- Panel de tareas a la izquierda -->
-      <div class="min-w-[280px] max-w-[320px] bg-gray-100 p-5 rounded-lg shadow-md">
-        <h3 class="mt-0 text-gray-800 border-b-2 border-gray-300 pb-2.5 text-xl">Lista de Tareas</h3>
-        <div class="flex flex-col gap-3">
-          <div v-if="allTasksList.length === 0" class="text-center text-gray-400 py-5 italic">
-            Cargando tareas...
+  <div id="app" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 font-sans">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="text-center sm:text-left">
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              SARA
+            </h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Robot Management System</p>
           </div>
-          <div 
-            v-for="task in allTasksList" 
-            :key="task.id"
-            :class="[
-              'p-4 rounded-lg border-2 transition-all duration-300',
-              task.status === 'completed' ? 'bg-gray-500 border-gray-600 text-white' :
-              task.status === 'active' ? 'bg-green-500 border-green-600 text-white shadow-lg scale-105 animate-pulse' :
-              'bg-white border-gray-300 text-gray-800'
-            ]"
-          >
-            <div class="flex justify-between items-center mb-2">
-              <div class="font-bold text-sm">{{ task.robotId.toUpperCase() }}</div>
-              <div class="text-xs font-semibold px-2 py-1 rounded-xl bg-white/30">{{ task.statusLabel }}</div>
-            </div>
-            <div class="text-base font-medium">{{ task.name }}</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="flex-shrink-0">
-        <canvas ref="canvas" width="800" height="800" class="border-4 border-gray-800 block shadow-lg" />
-      </div>
-
-      <div class="min-w-[300px] max-w-[400px]">
-        <div v-if="zones" class="bg-gray-100 p-5 rounded-lg mb-5">
-          <h3 class="mt-0 text-gray-800 border-b-2 border-gray-300 pb-2.5">Zones</h3>
-          <div v-for="(name, id) in zones" :key="id" class="flex items-center gap-2.5 my-2.5 text-base">
-            <span class="w-8 h-8 rounded border-2 border-gray-800 inline-block" :style="{ backgroundColor: getColor(id) }"></span>
-            <span>{{ id }}: {{ name }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sección de robots debajo del mapa -->
-    <div v-if="robotsList.length > 0" class="mt-5 p-4 bg-gray-100 rounded-lg flex flex-col items-center">
-      <h3 class="text-gray-800 mb-4 text-lg font-semibold text-center">Tareas por Robot</h3>
-      <div class="flex gap-4 justify-center">
-        <div 
-          v-for="robotId in robotsList" 
-          :key="robotId"
-          class="bg-white rounded-md p-8 shadow-sm border border-gray-200"
-        >
-          <h4 class="text-xs font-semibold text-gray-600 mb-2 pb-1.5 border-b border-gray-300 whitespace-nowrap">{{ robotId.toUpperCase() }}</h4>
-          <div class=" flex flex-col gap-3">
-            <div 
-              v-for="task in getRobotTasks(robotId)" 
-              :key="task.id"
-              :class="[
-                'px-2 py-1.5 rounded border transition-all duration-300 text-xs whitespace-nowrap',
-                task.status === 'completed' ? 'bg-gray-500 border-gray-600 text-white' :
-                task.status === 'active' ? 'bg-green-500 border-green-600 text-white font-medium' :
-                'bg-white border-gray-300 text-gray-800'
-              ]"
+          
+          <div class="flex justify-center sm:justify-end items-center gap-3">
+            <span :class="[
+              'inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-xs sm:text-sm shadow-sm border-2 transition-all duration-300',
+              connected 
+                ? 'bg-green-50 text-green-700 border-green-200 shadow-green-100' 
+                : 'bg-red-50 text-red-700 border-red-200 shadow-red-100 animate-pulse'
+            ]">
+              <span :class="[
+                'w-2 h-2 rounded-full',
+                connected ? 'bg-green-500' : 'bg-red-500'
+              ]"></span>
+              {{ connected ? 'Conectado' : 'Desconectado' }}
+            </span>
+            
+            <button
+              @click="showPanel = true"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm transform hover:scale-105"
             >
-              <div>{{ task.name }}</div>
-            </div>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              Panel de Control
+            </button>
           </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 overflow-x-hidden">
+      <div class="flex flex-col gap-6 lg:gap-8">
+        <!-- Three column layout: Tasks, Map, Zones -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+          <!-- Tasks on the left -->
+          <div class="order-1 lg:col-span-3">
+            <Tasks :allTasksList="allTasksList" />
+          </div>
+          
+          <!-- Map in the center -->
+          <div class="order-3 lg:order-2 lg:col-span-6">
+            <Map
+              :grid="grid"
+              :zones="zones"
+              :robotPaths="robotPaths"
+              :robotPositions="robotPositions"
+              :robotInitialPositions="robotInitialPositions"
+              :colorMap="colorMap"
+            />
+          </div>
+          
+          <!-- Zones on the right (hidden on mobile) -->
+          <div class="order-2 lg:order-3 lg:col-span-3 hidden lg:block">
+            <Zones :zones="zones" :colorMap="colorMap" />
+          </div>
+        </div>
+
+        <!-- Robots section below -->
+        <Robots :allTasksList="allTasksList" :robotsList="robotsList" />
+      </div>
+    </main>
+  
+    <!-- Modal del Panel de Control -->
+    <div 
+      v-if="showPanel"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn"
+      @click.self="showPanel = false"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden relative transform transition-all animate-slideUp">
+        <button
+          @click="showPanel = false"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200 z-10"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        
+        <div class="overflow-y-auto max-h-[90vh]">
+          <Panel :allTasksList="allTasksList" />
         </div>
       </div>
     </div>
@@ -85,16 +98,22 @@
 
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
+import Tasks from './components/principal/tasks.vue'
+import Robots from './components/principal/robots.vue'
+import Map from './components/principal/map.vue'
+import Zones from './components/principal/zones.vue'
+import Panel from './components/panelControl/panel.vue'
 
-const canvas = ref<HTMLCanvasElement | null>(null)
 const connected = ref(false)
 const grid = ref<string[][]>([])
 const zones = ref<Record<string, string> | null>(null)
 const tasks = ref<Record<string, string[]> | null>(null)
-const robotPaths = ref<Record<string, [number, number][]>>({})
-const robotPositions = ref<Record<string, [number, number]>>({})
-const robotAnimating = ref<Record<string, boolean>>({})
-const activeTasks = ref<Record<string, string>>({})
+const robotPaths = ref<Record<string, [number, number][]>>({});
+const robotPositions = ref<Record<string, [number, number]>>({});
+const robotInitialPositions = ref<Record<string, [number, number]>>({});
+const robotAnimating = ref<Record<string, boolean>>({});
+const activeTasks = ref<Record<string, string>>({});
+const showPanel = ref(false);
 
 // Lista de todas las tareas definidas
 interface Task {
@@ -135,11 +154,9 @@ const colorMap: Record<string, string> = {
   '10': '#20B2AA',    // POI 10 - Verde mar claro
 }
 
-function getColor(id: string): string {
-  return colorMap[id] || '#' + Math.floor(Math.random()*16777215).toString(16)
-}
+// getColor ya no se usa aquí, se usa en Map.vue
 
-// Filtrar tareas por robot
+// Filtrar tareas por robot (ya no se usa aquí, está en Robots.vue)
 function getRobotTasks(robotId: string): Task[] {
   return allTasksList.value.filter(task => task.robotId === robotId)
 }
@@ -195,12 +212,11 @@ function connectWebSocket() {
 // Inicializar el grid, zones y tasks
 function initialize(content: any) {
   console.log('Initializing with content:', content)
-  
   grid.value = content.grid
   zones.value = content.zones
   tasks.value = content.tasks
-  console.log('Grid, zones, and tasks set:', grid.value, zones.value, tasks.value)
-  
+  console.log('Grid, zones, and tasks set:', grid.value, zones.value, tasks.value);
+
   // Inicializar la lista de tareas desde el servidor
   if (content.allTasks) {
     allTasksList.value = content.allTasks.map((task: any) => ({
@@ -210,7 +226,7 @@ function initialize(content: any) {
                    'Pendiente'
     }))
     console.log('Initialized tasks list:', allTasksList.value)
-    
+
     // Extraer la lista única de robots
     const uniqueRobots = new Set<string>()
     content.allTasks.forEach((task: any) => {
@@ -219,8 +235,20 @@ function initialize(content: any) {
     robotsList.value = Array.from(uniqueRobots).sort()
     console.log('Robots list:', robotsList.value)
   }
-  
-  drawGrid()
+
+  // Guardar posiciones iniciales de los robots si vienen en el mensaje
+  if (content.robots) {
+    // content.robots debe ser un objeto tipo { [robotId]: [fila, columna] }
+    robotInitialPositions.value = { ...content.robots }
+    // Inicializar robotPositions con las posiciones iniciales si no hay ruta activa
+    for (const [robotId, pos] of Object.entries(content.robots)) {
+      if (!robotPositions.value[robotId]) {
+        robotPositions.value[robotId] = pos as [number, number]
+      }
+    }
+  }
+
+  // No llamar a drawGrid, el canvas lo gestiona Map.vue
 }
 
 // Actualizar tareas
@@ -234,7 +262,7 @@ function updateTask(content: any) {
   // Si el mensaje incluye cambios en el grid, actualizar
   if (content.grid) {
     grid.value = content.grid
-    drawGrid()
+    // No llamar a drawGrid
   }
 }
 
@@ -290,31 +318,25 @@ function updateTaskStatus(taskName: string, status: 'completed' | 'active' | 'pe
 // Animar el movimiento del robot a través de la ruta
 function startRobotAnimation(robotId: string, path: [number, number][], taskName: string) {
   if (path.length === 0) return
-  
   let currentStep = 0
   robotAnimating.value[robotId] = true
-  
   // Establecer posición inicial
   robotPositions.value[robotId] = path[0]
-  drawGrid()
-  
+  // No llamar a drawGrid
   // Animar cada paso (1 segundo por cuadrado)
   animationIntervals[robotId] = window.setInterval(() => {
     currentStep++
-    
     if (currentStep < path.length) {
       // Mover el robot a la siguiente posición
-      robotPositions.value[robotId] = path[currentStep]
-      drawGrid()
+  robotPositions.value[robotId] = path[currentStep]
+  // No llamar a drawGrid
     } else {
       // Terminar la animación
       clearInterval(animationIntervals[robotId])
       delete animationIntervals[robotId]
       robotAnimating.value[robotId] = false
-      
       // Marcar la tarea como completada
       updateTaskStatus(taskName, 'completed')
-      
       // Notificar al servidor que terminó
       if (ws && ws.readyState === WebSocket.OPEN) {
         const message = {
@@ -324,14 +346,18 @@ function startRobotAnimation(robotId: string, path: [number, number][], taskName
         ws.send(JSON.stringify(message))
         console.log(`Robot ${robotId} finished path, sent terminado message`)
       }
-      
       // Limpiar la ruta visual después de un momento
       cleanupTimeouts[robotId] = window.setTimeout(() => {
-        // Solo limpiar si no hay una nueva animación en curso
+        // Solo limpiar la ruta si no hay una nueva animación en curso
         if (!animationIntervals[robotId]) {
+          // Limpiar solo el path, no la posición del robot
           delete robotPaths.value[robotId]
-          delete robotPositions.value[robotId]
-          drawGrid()
+          // Mantener al robot en su última posición
+          // Si hay posición inicial definida, usarla, si no, mantener la última
+          if (robotInitialPositions.value[robotId]) {
+            robotPositions.value[robotId] = robotInitialPositions.value[robotId]
+          }
+          // NO eliminar robotPositions para que el robot siga visible
         }
         delete cleanupTimeouts[robotId]
       }, 2000)
@@ -339,168 +365,8 @@ function startRobotAnimation(robotId: string, path: [number, number][], taskName
   }, 1000) // 1 segundo por cuadrado
 }
 
-function drawGrid() {
-  const c = canvas.value
-  if (!c || !grid.value.length) return
-  
-  const ctx = c.getContext('2d')!
-  const rows = grid.value.length
-  const cols = grid.value[0].length
-  
-  const cellWidth = c.width / cols
-  const cellHeight = c.height / rows
-  
-  // Limpiar el canvas
-  ctx.clearRect(0, 0, c.width, c.height)
-  
-  // Dibujar cada celda
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const cellValue = grid.value[row][col]
-      const color = getColor(cellValue)
-      
-      // Dibujar celda
-      ctx.fillStyle = color
-      ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
-      
-      // Dibujar borde de la celda
-      ctx.strokeStyle = '#333'
-      ctx.lineWidth = 2
-      ctx.strokeRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
-      
-      // Dibujar el número si no es 255 (espacio vacío)
-      if (cellValue !== '255') {
-        ctx.fillStyle = '#000'
-        ctx.font = `${cellWidth * 0.3}px Arial`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-      
-      }
-    }
-  }
-  
-  // Dibujar las rutas de los robots
-  const robotColors: Record<string, string> = {
-    'robot1': '#FF00FF',  // Magenta
-    'robot2': '#00FF00',  // Verde brillante
-    'robot3': '#0000FF',  // Azul
-  }
-  
-  Object.entries(robotPaths.value).forEach(([robotId, path]) => {
-    const color = robotColors[robotId] || '#FF0000'
-    
-    if (path.length === 0) return
-    
-    // Dibujar la línea de la ruta con transparencia para verla mejor
-    ctx.globalAlpha = 0.6
-    ctx.strokeStyle = color
-    ctx.lineWidth = 6
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    
-    ctx.beginPath()
-    for (let i = 0; i < path.length; i++) {
-      const [row, col] = path[i]
-      const x = col * cellWidth + cellWidth / 2
-      const y = row * cellHeight + cellHeight / 2
-      
-      if (i === 0) {
-        ctx.moveTo(x, y)
-      } else {
-        ctx.lineTo(x, y)
-      }
-    }
-    ctx.stroke()
-    ctx.globalAlpha = 1.0
-    
-    // Dibujar círculos en cada punto de la ruta
-    path.forEach(([row, col], index) => {
-      const x = col * cellWidth + cellWidth / 2
-      const y = row * cellHeight + cellHeight / 2
-      
-      // Círculo más grande para el inicio
-      if (index === 0) {
-        ctx.fillStyle = color
-        ctx.beginPath()
-        ctx.arc(x, y, cellWidth * 0.25, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.strokeStyle = '#FFFFFF'
-        ctx.lineWidth = 3
-        ctx.stroke()
-      } 
-      // Círculo grande para el final
-      else if (index === path.length - 1) {
-        ctx.fillStyle = color
-        ctx.beginPath()
-        ctx.arc(x, y, cellWidth * 0.3, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.strokeStyle = '#FFFFFF'
-        ctx.lineWidth = 4
-        ctx.stroke()
-      }
-      // Puntos pequeños para los puntos intermedios
-      else {
-        ctx.fillStyle = color
-        ctx.beginPath()
-        ctx.arc(x, y, cellWidth * 0.12, 0, 2 * Math.PI)
-        ctx.fill()
-      }
-    })
-  })
-  
-  // Dibujar la posición actual de cada robot (encima de la ruta)
-  Object.entries(robotPositions.value).forEach(([robotId, position]) => {
-    const color = robotColors[robotId] || '#FF0000'
-    const [row, col] = position
-    
-    const x = col * cellWidth + cellWidth / 2
-    const y = row * cellHeight + cellHeight / 2
-    
-    // Dibujar el robot como un círculo grande con borde y sombra
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
-    ctx.shadowBlur = 10
-    ctx.shadowOffsetX = 3
-    ctx.shadowOffsetY = 3
-    
-    // Círculo exterior (robot)
-    ctx.fillStyle = color
-    ctx.beginPath()
-    ctx.arc(x, y, cellWidth * 0.35, 0, 2 * Math.PI)
-    ctx.fill()
-    
-    // Borde blanco grueso
-    ctx.shadowColor = 'transparent'
-    ctx.strokeStyle = '#FFFFFF'
-    ctx.lineWidth = 4
-    ctx.stroke()
-    
-    // Borde negro fino
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 2
-    ctx.stroke()
-    
-    // Dibujar el ID del robot en el centro
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = `bold ${cellWidth * 0.2}px Arial`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)'
-    ctx.shadowBlur = 3
-    const robotNumber = robotId.replace('robot', '')
-    ctx.fillText(robotNumber, x, y)
-    
-    // Resetear sombra
-    ctx.shadowColor = 'transparent'
-    ctx.shadowBlur = 0
-    ctx.shadowOffsetX = 0
-    ctx.shadowOffsetY = 0
-  })
-}
-
 onMounted(() => {
   connectWebSocket()
-  
- 
 })
 
 onUnmounted(() => {
@@ -521,6 +387,27 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Solo estilos necesarios que no se pueden hacer con Tailwind */
-</style>
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+</style>

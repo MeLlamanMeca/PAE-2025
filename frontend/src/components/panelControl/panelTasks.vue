@@ -1,0 +1,303 @@
+<template>
+  <div>
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+        </svg>
+        Lista de Tareas
+      </h3>
+      <button
+        @click="openCreateTaskModal"
+        class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm transform hover:scale-105"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Añadir Tarea
+      </button>
+    </div>
+
+    <!-- Tabla de tareas pendientes -->
+    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-md">
+      <table class="w-full border-collapse bg-white">
+        <thead>
+          <tr class="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Nombre</th>
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Descripción</th>
+            <th class="px-4 py-3 text-left text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Estado</th>
+            <th class="px-4 py-3 text-center text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="pendingTasks.length === 0">
+            <td colspan="4" class="px-4 py-12 text-center">
+              <div class="flex flex-col items-center justify-center">
+                <svg class="w-16 h-16 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-gray-500 text-sm font-medium">No hay tareas pendientes</p>
+              </div>
+            </td>
+          </tr>
+          <tr 
+            v-for="task in pendingTasks" 
+            :key="task.id"
+            class="border-b border-gray-100 hover:bg-blue-50 transition-all duration-200"
+          >
+            <td class="px-4 py-3 text-xs sm:text-sm font-medium text-gray-900">{{ task.name }}</td>
+            <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ task.description || '-' }}</td>
+            <td class="px-4 py-3">
+              <span :class="[
+                'inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold',
+                task.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                task.status === 'active' ? 'bg-green-100 text-green-800 border border-green-200' :
+                'bg-gray-100 text-gray-800 border border-gray-200'
+              ]">
+                {{ task.statusLabel }}
+              </span>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <button
+                  @click="openEditTaskModal(task)"
+                  class="inline-flex items-center px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-xs font-semibold transition-all duration-200 shadow hover:shadow-md transform hover:scale-105"
+                >
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                  Editar
+                </button>
+                <button
+                  @click="deleteTask(task.id)"
+                  class="inline-flex items-center px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-semibold transition-all duration-200 shadow hover:shadow-md transform hover:scale-105"
+                >
+                  <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  Eliminar
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modal para crear/editar tarea -->
+    <div 
+      v-if="showTaskModal"
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn"
+      @click.self="closeTaskModal"
+    >
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 relative transform transition-all animate-slideUp">
+        <!-- Botón cerrar -->
+        <button
+          @click="closeTaskModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+        
+        <!-- Título del modal -->
+        <div class="mb-6">
+          <h3 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            {{ editingTask ? 'Editar Tarea' : 'Añadir Nueva Tarea' }}
+          </h3>
+        </div>
+
+        <!-- Formulario -->
+        <form @submit.prevent="saveTask" class="space-y-5">
+          <!-- Nombre -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Nombre *</label>
+            <input
+              v-model="taskForm.name"
+              type="text"
+              required
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
+              :placeholder="editingTask ? editingTask.name : 'Nombre de la tarea'"
+            />
+          </div>
+
+          <!-- Descripción -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
+            <textarea
+              v-model="taskForm.description"
+              rows="3"
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 resize-none"
+              :placeholder="editingTask ? editingTask.description : 'Descripción de la tarea'"
+            ></textarea>
+          </div>
+
+          <!-- POI Inicio -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">POI Inicio *</label>
+            <select
+              v-model="taskForm.poiStart"
+              required
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
+            >
+              <option value="" disabled>Seleccionar POI</option>
+              <option v-for="poi in availablePOIs" :key="poi.id" :value="poi.id">
+                {{ poi.id }} - {{ poi.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- POI Final -->
+          <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">POI Final *</label>
+            <select
+              v-model="taskForm.poiEnd"
+              required
+              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
+            >
+              <option value="" disabled>Seleccionar POI</option>
+              <option v-for="poi in availablePOIs" :key="poi.id" :value="poi.id">
+                {{ poi.id }} - {{ poi.name }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-200">
+            <button
+              type="button"
+              @click="closeTaskModal"
+              class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-all duration-200 text-sm"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-sm transform hover:scale-105"
+            >
+              {{ editingTask ? 'Guardar Cambios' : 'Crear Tarea' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+
+interface Task {
+  id: string
+  robotId: string
+  name: string
+  description?: string
+  poiStart?: string
+  poiEnd?: string
+  status: 'completed' | 'active' | 'pending'
+  statusLabel: string
+}
+
+interface POI {
+  id: string
+  name: string
+}
+
+const props = defineProps<{
+  allTasksList: Task[]
+}>()
+
+// Estado del modal
+const showTaskModal = ref(false)
+const editingTask = ref<Task | null>(null)
+
+// Formulario de tarea
+const taskForm = ref({
+  name: '',
+  description: '',
+  poiStart: '',
+  poiEnd: ''
+})
+
+// Lista de POIs disponibles (esto debería venir de props o del servidor)
+const availablePOIs = ref<POI[]>([
+  { id: '0', name: 'POI 0 - Turquesa' },
+  { id: '1', name: 'POI 1 - Tomate' },
+  { id: '2', name: 'POI 2 - Azul real' },
+  { id: '3', name: 'POI 3 - Naranja oscuro' },
+  { id: '4', name: 'POI 4 - Púrpura medio' },
+  { id: '5', name: 'POI 5 - Verde lima' },
+  { id: '6', name: 'POI 6 - Rosa profundo' },
+  { id: '7', name: 'POI 7 - Azul cielo profundo' },
+  { id: '8', name: 'POI 8 - Oro' },
+  { id: '9', name: 'POI 9 - Orquídea medio' },
+  { id: '10', name: 'POI 10 - Verde mar claro' },
+])
+
+// Filtrar solo tareas pendientes
+const pendingTasks = computed(() => {
+  return props.allTasksList.filter(task => task.status === 'pending')
+})
+
+// Abrir modal para crear tarea
+function openCreateTaskModal() {
+  editingTask.value = null
+  taskForm.value = {
+    name: '',
+    description: '',
+    poiStart: '',
+    poiEnd: ''
+  }
+  showTaskModal.value = true
+}
+
+// Abrir modal para editar tarea
+function openEditTaskModal(task: Task) {
+  editingTask.value = task
+  taskForm.value = {
+    name: task.name,
+    description: task.description || '',
+    poiStart: task.poiStart || '',
+    poiEnd: task.poiEnd || ''
+  }
+  showTaskModal.value = true
+}
+
+// Cerrar modal
+function closeTaskModal() {
+  showTaskModal.value = false
+  editingTask.value = null
+  taskForm.value = {
+    name: '',
+    description: '',
+    poiStart: '',
+    poiEnd: ''
+  }
+}
+
+// Guardar tarea (crear o editar)
+function saveTask() {
+  if (editingTask.value) {
+    // Editar tarea existente
+    console.log('Editando tarea:', editingTask.value.id, taskForm.value)
+    // TODO: Enviar al servidor para actualizar
+  } else {
+    // Crear nueva tarea
+    console.log('Creando nueva tarea:', taskForm.value)
+    // TODO: Enviar al servidor para crear
+  }
+  closeTaskModal()
+}
+
+// Eliminar tarea
+function deleteTask(taskId: string) {
+  if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+    console.log('Eliminando tarea:', taskId)
+    // TODO: Enviar al servidor para eliminar
+  }
+}
+</script>
