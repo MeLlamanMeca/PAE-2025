@@ -23,9 +23,13 @@ class TaskControllerImpl : public TaskController {
             return result.first->second;
         }
 
-        void deleteTask(int taskID) { 
+        Task& deleteTask(int taskID) { 
             auto it = taskMap.find(taskID);
-            if (it != taskMap.end()) taskMap.erase(it);
+            if (it != taskMap.end()) {
+                Task& deletedTask = it->second;
+                taskMap.erase(it);
+                return deletedTask;
+            }
             else throw std::out_of_range("Task ID not found"); 
         }
 };

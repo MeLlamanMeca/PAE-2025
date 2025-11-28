@@ -9,7 +9,6 @@
 #include "./Point.h"
 #include "./PointHash.h"
 #include "../robots/Robot.h"
-#include "../common/TaskData.h"
 
 class Map {
 private:
@@ -39,5 +38,5 @@ public:
     void createSlowZone(Point tl, Point br);
     void createCommonZone(Point tl, Point br);
 
-    TaskData startTask(Point start, Point end, Point robotPos);
+    Route startTask(Point start, Point end, Point robotPos);
 };

@@ -13,13 +13,14 @@ class MapServiceImpl : public MapService {
 
     public:
         MapServiceImpl(ControllerFactory& cf) : controllerFactory(cf) {}
-        Map& get(int mapID) override;
+        Map& getMap(int mapID) override;
         TaskAssignation assignTask(Task& task, int mapID) override;
         void addPoi(int mapID, POI& poi) override;
         void addRobot(int mapID, Robot& r) override;
         void createForbidenZone(int mapID, Point tl, Point br) override;
         void createSlowZone(int mapID, Point tl, Point br) override;
         void createCommonZone(int mapID, Point tl, Point br) override;
-        void createMap(int mapID, std::vector<std::vector<char>> map) override;
+        Map& createMap(int mapID, std::vector<std::vector<char>> map) override;
+        Map& deleteMap(int mapID) override;
         void deletePoi(int mapID, Point position) override;
 };

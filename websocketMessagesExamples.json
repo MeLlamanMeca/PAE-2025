@@ -1,0 +1,49 @@
+{
+    "createTask": {
+        "type": "createTask",
+        "content": {
+            "mapID": 1,
+            "pointIni": {"x": 1, "y" : 1},
+            "pointFin": {"x": 2, "y" : 2}
+        }
+    },
+    "deleteTask": {
+        "type": "deleteTask",
+        "content": {
+            "robotID": 1,
+            "taskID": 1
+        }
+    },
+    "endCurrentTask": {
+        "type": "endCurrentTask",
+        "content": {
+            "robotID": 1
+        }
+    },
+    "startTask": {
+        "type": "startTask",
+        "content": {
+            "robotID": 1
+        }
+    },
+    "updateRobotPosition": {
+        "type": "updateRobotPosition",
+        "content": {
+            "robotID": 1,
+            "position": {"x": 1, "y" : 1}
+        }
+    },
+    "createRobot": {
+        "type": "createRobot",
+        "content": {
+            "mapID": 1,
+            "position": {"x": 1, "y" : 1}
+        }
+    },
+    "deleteRobot": {
+        "type": "deleteRobot",
+        "content": {
+            "robotID": 1
+        }
+    }
+}

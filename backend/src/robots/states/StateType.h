@@ -2,6 +2,5 @@
 
 enum class StateType {
     WORKING,
-    STANDBY,
-    TYPE3
+    STANDBY
 };

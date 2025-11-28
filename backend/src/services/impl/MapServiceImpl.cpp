@@ -8,8 +8,13 @@ TaskAssignation taskAssigner(Map& map, Task& task) {
 
 //publics
 
-Map& MapServiceImpl::get(int mapID) {
+Map& MapServiceImpl::getMap(int mapID) {
     return controllerFactory.getMapController().get(mapID);
+}
+
+Map& MapServiceImpl::deleteMap(int mapID) {
+    throw std::logic_error("Not implemented");
+    //todo
 }
 
 TaskAssignation MapServiceImpl::assignTask(Task& task, int mapID) {
@@ -48,8 +53,8 @@ void MapServiceImpl::createCommonZone(int mapID, Point tl, Point br) {
     map.createCommonZone(tl, br);
 }
 
-void MapServiceImpl::createMap(int mapID, std::vector<std::vector<char>> map) {
-    controllerFactory.getMapController().create(mapID, map);
+Map& MapServiceImpl::createMap(int mapID, std::vector<std::vector<char>> map) {
+    return controllerFactory.getMapController().create(mapID, map);
 }
 
 void MapServiceImpl::deletePoi(int mapID, Point position) {

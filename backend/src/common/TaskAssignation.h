@@ -3,6 +3,7 @@
 struct TaskAssignation {
     int robotID;
     int position;
+    int taskID;
     
-    TaskAssignation(int robotID, int position) : robotID(robotID), position(position) {}
+    TaskAssignation(int robotID, int position, int taskID) : robotID(robotID), position(position), taskID(taskID) {}
 };

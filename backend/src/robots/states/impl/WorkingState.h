@@ -3,24 +3,27 @@
 #include "../../Robot.h"
 
 #include "StandByState.h"
-
 class WorkingState : public RobotState {
     private:
+        Task active;
+        Route route;
 
     public: 
+        WorkingState(Task active, Route route) : active(active), route(route) {}
+
         StateType getState() override { return StateType::WORKING; };
         
         void endCurrentTask(Robot& robot) override {
-            auto tasks = robot.getTasks();
-            if (!tasks.empty()) {
-                auto primeraTarea = tasks.front();
-                robot.deleteTask(primeraTarea.get().getID());
-                robot.setState(std::make_unique<StandByState>());
-            }
-            else throw std::runtime_error("Robot has no tasks.");
+            robot.setState(std::make_unique<StandByState>());
         }
 
-        TaskData startTask(Robot& robot) override {
+        void startTask(Robot& robot) override {
             throw std::runtime_error("Task in progress.");
+        }
+        Task& getActiveTask() const {
+            return const_cast<Task&>(active);
+        }
+        Route& getActiveRoute() const {
+            return const_cast<Route&>(route);
         }
 };

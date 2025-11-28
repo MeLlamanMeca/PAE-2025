@@ -4,28 +4,33 @@
 #include "../common/Point.h"
 #include "../tasks/Task.h"
 #include "./states/RobotState.h"
-#include "../common/TaskData.h"
+#include "./states/StateType.h"
 
 class Map;
 
 class Robot {
     protected:
         int ID;
-        Map& map;
+        int maxWeight;
         Point position;
         Point chargingBayPosition;
         int load = 0;
+        
         std::unique_ptr<RobotState> state;
         std::list<std::reference_wrapper<Task>> tasks;
+        Map& map;
 
     public:
-        Robot(Point position, int ID, Map& map) : chargingBayPosition(position), position(position), ID(ID), state(/*TODO poner estado standby por defecto*/), map(map){}
+        Robot(Point position, int ID, Map& map, int maxWeight) : chargingBayPosition(position), position(position), ID(ID), state(/*TODO poner estado standby por defecto*/), map(map), maxWeight(maxWeight) {}
 
         // --- GETTERS (default) ---
         const std::list<std::reference_wrapper<Task>>& getTasks() const { return tasks; }
         int getID() const { return ID; }
         const Point& getPosition() const { return position; }
-        const Map& getMap() const { return map; }
+        Map& getMap() const { return map; }
+        const int getMaxWeight() const { return maxWeight; }
+        StateType getState() const { return state->getState(); }
+
 
         // --- SETTERS (default) ---
         void setState(std::unique_ptr<RobotState> newState) { state = std::move(newState); }
@@ -33,7 +38,7 @@ class Robot {
 
         // --- STATE functions ---
         void endCurrentTask() { state->endCurrentTask(*this); }
-        TaskData startTask() { return state->startTask(*this); }
+        void startTask() { return state->startTask(*this); }
 
         // others
         void addTask(Task& task, int position) {
@@ -49,8 +54,8 @@ class Robot {
             });
         }
 
-        
-
-        
+        int canHandle(int weight) const { return weight <= maxWeight; }
+        Task& getActiveTask() const { state->getActiveTask(); }
+        Route& getActiveRoute() const { state->getActiveRoute(); }
         
 };
