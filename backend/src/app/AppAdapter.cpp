@@ -3,16 +3,16 @@
 #include "../common/Point.h"
 #include "../common/TaskAssignation.h"
 #include <string>
-
+using json = nlohmann::json;
 // ----------------------------------------------------------------------------------------
 // PRIVATE FUNCTIONS ----------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
-void AppAdapter::broadcastMessage(const nlohmann::json& msg) {
+void AppAdapter::broadcastMessage(const json& msg) {
     if (sendMessageCallback) sendMessageCallback(msg);
 }
 
-void AppAdapter::handleCreateTask(const nlohmann::json& content) {
+void AppAdapter::handleCreateTask(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
         auto pointIni = content.at("PointIni");
@@ -29,7 +29,7 @@ void AppAdapter::handleCreateTask(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleDeleteTask(const nlohmann::json& content) {
+void AppAdapter::handleDeleteTask(const json& content) {
     try {
         int robotID = content.at("robotID").get<int>();
         int taskID = content.at("taskID").get<int>();
@@ -44,7 +44,7 @@ void AppAdapter::handleDeleteTask(const nlohmann::json& content) {
     
 }
 
-void AppAdapter::handleEndCurrentTask(const nlohmann::json& content) {
+void AppAdapter::handleEndCurrentTask(const json& content) {
     try {
         int robotID = content.at("robotID").get<int>();
 
@@ -58,21 +58,21 @@ void AppAdapter::handleEndCurrentTask(const nlohmann::json& content) {
     
 }
 
-void AppAdapter::handleStartTask(const nlohmann::json& content) {
+void AppAdapter::handleStartTask(const json& content) {
     try {
         int robotID = content.at("robotID").get<int>();
 
         app.startTask(robotID);
         //Task& t = app.getRobot(robotID).getCurrentTask();
         //TODO
-        //sendremoveTask(taskID), sendactiveTask(robotID, taskInfo)
+        //sendremoveTask(taskID), sendActiveTask(robotID, taskInfo)
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleEndCurrentTask message: " << e.what() << "\n";
     }
 }
 
-void AppAdapter::handleUpdateRobotPosition(const nlohmann::json& content) {
+void AppAdapter::handleUpdateRobotPosition(const json& content) {
     try {
         int robotID = content.at("robotID").get<int>();
         auto position = content.at("position");
@@ -87,13 +87,14 @@ void AppAdapter::handleUpdateRobotPosition(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleCreateRobot(const nlohmann::json& content) {
+void AppAdapter::handleCreateRobot(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
+        int maxWeight = content.at("maxWeight").get<int>();
         auto position = content.at("position");
         Point point = Point(position.at("x").get<int>(), position.at("y").get<int>());
 
-        app.createRobot(mapID, point);
+        app.createRobot(mapID, point, maxWeight);
 
         //not implemented in live
     }
@@ -101,7 +102,7 @@ void AppAdapter::handleCreateRobot(const nlohmann::json& content) {
         std::cerr << "Error parsing handleCreateRobot message: " << e.what() << "\n";
     }
 }
-void AppAdapter::handleDeleteRobot(const nlohmann::json& content) {
+void AppAdapter::handleDeleteRobot(const json& content) {
     try {
         int robotID = content.at("robotID").get<int>();
 
@@ -114,7 +115,7 @@ void AppAdapter::handleDeleteRobot(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleCreateCommonPoi(const nlohmann::json& content) {
+void AppAdapter::handleCreateCommonPoi(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
         auto position = content.at("position");
@@ -130,7 +131,7 @@ void AppAdapter::handleCreateCommonPoi(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleDeletePoi(const nlohmann::json& content) {
+void AppAdapter::handleDeletePoi(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
         auto position = content.at("position");
@@ -145,7 +146,7 @@ void AppAdapter::handleDeletePoi(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleCreateForbidenZone(const nlohmann::json& content) {
+void AppAdapter::handleCreateForbidenZone(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
         auto tl = content.at("tl");
@@ -162,7 +163,7 @@ void AppAdapter::handleCreateForbidenZone(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleCreateSlowZone(const nlohmann::json& content) {
+void AppAdapter::handleCreateSlowZone(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
         auto tl = content.at("tl");
@@ -179,7 +180,7 @@ void AppAdapter::handleCreateSlowZone(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleCreateCommonZone(const nlohmann::json& content) {
+void AppAdapter::handleCreateCommonZone(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
         auto tl = content.at("tl");
@@ -196,25 +197,53 @@ void AppAdapter::handleCreateCommonZone(const nlohmann::json& content) {
     }
 }
 
-void AppAdapter::handleCreateMap(const nlohmann::json& content) {
+void AppAdapter::handleCreateMap(const json& content) {
     //not available
 }
 
-void AppAdapter::handleDeleteMap(const nlohmann::json& content) {
+void AppAdapter::handleDeleteMap(const json& content) {
     //not available
 }
+void AppAdapter::handleIni(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto map = app.getMap(mapID);
 
+        json pois_array = json::array();
+        for (const auto& pair : map.getPOIs()) pois_array.push_back(pair.second.get());
+
+        json robot_array = json::array();
+        for (const auto& pair : map.getRobots()) robot_array.push_back(pair.second.get());
+
+        json iniMsg = {
+            {"type", "ini"},
+            {"content", {
+                {"map", map.getMap()},
+                {"pois", pois_array},
+                {"robots", robot_array}
+            }}
+        };
+
+        sendMessageCallback(iniMsg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleIni message: " << e.what() << "\n";
+    }
+}
 // ----------------------------------------------------------------------------------------
 // PUBLIC FUNCTIONS -----------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
-void AppAdapter::setSendMessageCallback(std::function<void(const nlohmann::json&)> cb) {
+void AppAdapter::setSendMessageCallback(std::function<void(const json&)> cb) {
     sendMessageCallback = std::move(cb);
 }
 
-void AppAdapter::handleMessage(const nlohmann::json& msg) {
+
+
+void AppAdapter::handleMessage(const json& msg) {
     // confirma que el mensaje es un json con el formato correcto
     // llama a la funcion correcta según el "type" del json
+    std::cout << msg << std::endl;
     try {
         std::string type = msg.at("type").get<std::string>();
 
@@ -229,6 +258,7 @@ void AppAdapter::handleMessage(const nlohmann::json& msg) {
         else if (type == "createForbidenZone") handleCreateForbidenZone(msg.at("content"));
         else if (type == "createSlowZone") handleCreateSlowZone(msg.at("content"));
         else if (type == "createCommonZone") handleCreateCommonZone(msg.at("content"));
+        else if (type == "ini") handleIni(msg.at("content"));
         else std::cerr << "Unknown message type: " << type << "\n";
         
     } catch (const std::exception& e) {

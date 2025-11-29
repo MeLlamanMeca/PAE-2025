@@ -23,17 +23,35 @@ void MyWebSocket::setupComms() {
     });
 
     //setup entry handle messages
-    server.setOnClientMessageCallback([this](std::shared_ptr<ix::ConnectionState> connectionState, const ix::WebSocket& webSocket, const ix::WebSocketMessagePtr& msg) {
+    auto messageHandler = [this](const ix::WebSocketMessagePtr& msg) 
+    {
+
         if (msg->type == ix::WebSocketMessageType::Message) {
             try {
                 json received = json::parse(msg->str);
-                adapter.handleMessage(received);
+                adapter.handleMessage(received); 
             } catch (const std::exception& e) {
-                std::cerr << "Error parsing message: " << e.what() << std::endl;
+                std::cerr << "Error al parsear mensaje: " << e.what() << std::endl;
             }
-        } else if (msg->type == ix::WebSocketMessageType::Error) {
-            std::cerr << "WebSocket error: " << msg->errorInfo.reason << std::endl;
+        } 
+        else if (msg->type == ix::WebSocketMessageType::Close) {
+            std::cout << "❌ Cliente desconectado. Code: " << msg->closeInfo.code << std::endl;
+        } 
+        else if (msg->type == ix::WebSocketMessageType::Error) {
+            std::cerr << "🚨 WebSocket error: " << msg->errorInfo.reason << std::endl;
         }
+    };
+
+    server.setOnConnectionCallback(
+    [messageHandler, this](std::weak_ptr<ix::WebSocket> webSocket, std::shared_ptr<ix::ConnectionState> connectionState) {
+        std::shared_ptr<ix::WebSocket> client = webSocket.lock();
+        
+        if (client) {
+            std::cout << "✅ Cliente conectado. IP: " << connectionState->getRemoteIp() << std::endl;
+
+            client->setOnMessageCallback(messageHandler);
+        }
+        
     });
 }
 

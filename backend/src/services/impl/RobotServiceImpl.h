@@ -13,7 +13,7 @@ public:
     void deleteTask(int robotID, int taskID) override;
     void endCurrentTask(int robotID) override;
     void updateRobotPosition(int robotID, Point pos) override;
-    Robot& createRobot(Point position, Map& map) override;
+    Robot& createRobot(Point position, Map& map, int maxWeight) override;
     Robot& deleteRobot(int robotID) override;
     void startTask(int robotID) override;
     Robot& getRobot(int robotID) override;

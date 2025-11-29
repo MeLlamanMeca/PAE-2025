@@ -25,6 +25,7 @@ class AppAdapter {
         void handleCreateCommonZone(const nlohmann::json& msg);
         void handleCreateMap(const nlohmann::json& msg);
         void handleDeleteMap(const nlohmann::json& msg);
+        void handleIni(const nlohmann::json& msg);
         
         
     public:

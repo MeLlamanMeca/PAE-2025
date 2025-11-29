@@ -82,7 +82,7 @@ void Map::createCommonZone(Point tl, Point br) {
     // TODO
 }
 
-TaskData startTask(Point start, Point end, Point robotPos) {
+void startTask(Point start, Point end, Point robotPos) {
     // TODO
     //crear mapa temporal con caminos de robots
     //llamar a aStar(mapatemporal, robotPos, iniPos)

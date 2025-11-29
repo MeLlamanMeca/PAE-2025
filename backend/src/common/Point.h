@@ -1,7 +1,9 @@
 #pragma once
 #include <cmath>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
+using json = nlohmann::json;
 
 struct Point {
     int x{0};
@@ -32,4 +34,13 @@ struct Point {
 
     inline std::ostream& operator<<(std::ostream& os, const Point& p) {
         return os << "Point{" << p.x << ", " << p.y << "}";
+    }
+
+    inline void to_json(json& j, const Point& p) {
+        j = {{"x", p.x},{"y", p.y}};
+    }
+
+    inline void from_json(const json& j, Point& p) {
+        p.x = j.at("x").get<double>();
+        p.y = j.at("y").get<double>();
     }

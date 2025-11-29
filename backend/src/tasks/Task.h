@@ -1,6 +1,7 @@
 #pragma once
 #include "../common/Point.h"
 
+
 class Task {
     private:
         Point ini;
@@ -13,3 +14,11 @@ class Task {
         inline const Point& getFin() const { return fin; }
         inline int getID() const { return taskID; }
 };
+
+    inline void to_json(json& j, const Task& p) {
+        j = json{
+            {"ini", p.getIni()},
+            {"fin", p.getFin()},
+            {"ID", p.getID()}
+        };
+    };

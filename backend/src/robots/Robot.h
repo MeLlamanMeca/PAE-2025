@@ -5,7 +5,9 @@
 #include "../tasks/Task.h"
 #include "./states/RobotState.h"
 #include "./states/StateType.h"
+#include <nlohmann/json.hpp>
 
+using json = nlohmann::json;
 class Map;
 
 class Robot {
@@ -27,9 +29,10 @@ class Robot {
         const std::list<std::reference_wrapper<Task>>& getTasks() const { return tasks; }
         int getID() const { return ID; }
         const Point& getPosition() const { return position; }
+        const Point& getChargingBayPosition() const { return chargingBayPosition; }
         Map& getMap() const { return map; }
         const int getMaxWeight() const { return maxWeight; }
-        StateType getState() const { return state->getState(); }
+        RobotState& getState() const { return *state; }
 
 
         // --- SETTERS (default) ---
@@ -55,7 +58,26 @@ class Robot {
         }
 
         int canHandle(int weight) const { return weight <= maxWeight; }
-        Task& getActiveTask() const { state->getActiveTask(); }
-        Route& getActiveRoute() const { state->getActiveRoute(); }
+        Task& getActiveTask() const { return state->getActiveTask(); }
+        Route& getActiveRoute() const { return state->getActiveRoute(); }
+        bool isWorking() const { return (state->getState() == StateType::WORKING); }
         
 };
+
+    inline void to_json(json& j, const Robot& p) {
+
+        json tasks_array = json::array();
+        for (const auto& task : p.getTasks()) tasks_array.push_back(task);
+
+        json state = json::object();
+        p.getState().to_json(state);
+        
+        j = json{
+            {"ID", p.getID()},
+            {"maxWeight", p.getMaxWeight()},
+            {"position", p.getPosition()},
+            {"chargingBayPosition", p.getChargingBayPosition()},
+            {"tasks", p.getTasks()},
+            {"state", state}
+        };
+    }

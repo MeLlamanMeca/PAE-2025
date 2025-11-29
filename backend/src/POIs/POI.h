@@ -19,3 +19,12 @@ class POI {
         void setID(int id) { ID = id; }
         int getID() const { return ID; }
 };
+
+    inline void to_json(json& j, const POI& p) {
+        j = json{
+            {"position", p.getPos()}, 
+            {"name", p.getName()},
+            {"id", p.getID()},
+            {"type", POITypeToString(p.getType())} 
+        };
+    }

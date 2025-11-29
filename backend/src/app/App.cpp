@@ -38,9 +38,9 @@ void App::createMap(int mapID, std::vector<std::vector<char>> map) {
     serviceFactory.getMapService().createMap(mapID, map);
 }
 
-void App::createRobot(int mapID, Point position){
+void App::createRobot(int mapID, Point position, int maxWeight){
     Map& m = serviceFactory.getMapService().getMap(mapID);
-    Robot& r = serviceFactory.getRobotService().createRobot(position, m);
+    Robot& r = serviceFactory.getRobotService().createRobot(position, m, maxWeight);
     serviceFactory.getMapService().addRobot(mapID, r);
 
     ChargingBayPOI poi(position);

@@ -15,8 +15,8 @@ void RobotServiceImpl::updateRobotPosition(int robotID, Point pos) {
     robot.setPosition(pos);
 }
 
-Robot& RobotServiceImpl::createRobot(Point position, Map& map) {
-    Robot& robot = controllerFactory.getRobotController().create(position, map);
+Robot& RobotServiceImpl::createRobot(Point position, Map& map, int maxWeight) {
+    Robot& robot = controllerFactory.getRobotController().create(position, map, maxWeight);
     return robot;
 }
 

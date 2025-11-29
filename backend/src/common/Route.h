@@ -14,3 +14,7 @@ class Route {
         const std::list<Point>& getPoints() const { return route; }
         int getCost() const { return cost; }
 };
+
+    inline void to_json(json& j, const Route& p) {
+        j = json{p.getPoints()};
+    };

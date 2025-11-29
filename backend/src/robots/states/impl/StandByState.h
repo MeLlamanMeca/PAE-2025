@@ -9,7 +9,13 @@ class StandByState : public RobotState {
     private:
 
     public: 
-        StateType getState() override { return StateType::STANDBY; };
+        StateType getState() const override { return StateType::STANDBY; };
+
+        void to_json(nlohmann::json& j) const override {
+            j = json{
+            {"state", StateTypeToString(getState())}
+            };
+        }
         
         void endCurrentTask(Robot& robot) override {
             throw std::runtime_error("No task in progress.");
@@ -38,3 +44,7 @@ class StandByState : public RobotState {
             throw std::runtime_error("No active route available in StandByState.");
         }
 };
+
+    inline void to_json(json& j, const StandByState& p) {
+        p.to_json(j);
+    };

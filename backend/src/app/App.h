@@ -18,7 +18,7 @@ class App {
         void startTask(int robotID);
         void updateRobotPosition(int robotID, Point pos);
 
-        void createRobot(int mapID, Point position);
+        void createRobot(int mapID, Point position, int maxWeight);
         void deleteRobot(int robotID);
 
         void createCommonPoi(int mapID, Point position, std::string name);
@@ -32,7 +32,6 @@ class App {
         void createMap(int mapID, std::vector<std::vector<char>> map);
         void deleteMap(int mapID);
 
-        //Task& getActiveTask(int robotID);
         Task& getTask(int taskID);
         Robot& getRobot(int robotID);
         Map& getMap(int mapID);

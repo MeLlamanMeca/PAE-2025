@@ -13,10 +13,10 @@ class RobotControllerImpl : public RobotController {
             throw std::out_of_range("Robot ID not found");
          }
 
-        Robot& create(Point position, Map& map) {
+        Robot& create(Point position, Map& map, int maxWeight) {
             auto result = robots.emplace(std::piecewise_construct,
                         std::forward_as_tuple(id),
-                        std::forward_as_tuple(position, id, map));
+                        std::forward_as_tuple(position, id, map, maxWeight));
 
             if (!result.second) throw std::runtime_error("Robot ID already exists");
             return result.first->second;

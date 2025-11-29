@@ -6,7 +6,7 @@ class Robot;
 
 class RobotState {
     public: 
-        virtual StateType getState() = 0;
+        virtual StateType getState() const = 0;
         
         virtual void endCurrentTask(Robot& robot) {
             throw std::runtime_error("An error occurred while ending the current task.");
@@ -20,4 +20,6 @@ class RobotState {
         virtual Route& getActiveRoute() const {
             throw std::runtime_error("An error occurred while gettign active route.");
         }
+        virtual void to_json(nlohmann::json& j) const = 0;
 };
+    
