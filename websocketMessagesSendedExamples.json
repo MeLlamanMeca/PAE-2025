@@ -1,0 +1,76 @@
+{
+    "assignedTask": {
+        "type": "assignedTask",
+        "content": {
+            "robotID": 1,
+            "position": 1
+        }
+    },
+    "moveRobot": {
+        "type": "moveRobot",
+        "content": {
+            "robotID": 1,
+            "position": {"x": 1, "y" : 1}
+        }
+    },
+    "ini": {
+        "type": "ini",
+        "content": {
+                "map": [["A", "A", "A", "A"],
+                        ["A", "A", "A", "A"],
+                        ["A", "A", "A", "A"],
+                        ["A", "A", "A", "A"]
+                    ],
+                "robots": [
+                        {
+                            "ID": 1,
+                            "maxWeight": 1,
+                            "position": {"x": 1, "y" : 1},
+                            "chargingBayPosition": {"x": 1, "y" : 1},
+                            "tasks":  [
+                                {
+                                    "ini": {"x": 1, "y" : 1},
+                                    "fin": {"x": 1, "y" : 1},
+                                    "ID": 1
+                                },
+                                {
+                                    "ini": {"x": 1, "y" : 1},
+                                    "fin": {"x": 1, "y" : 1},
+                                    "ID": 1
+                                }
+                            ],
+                            "state": "standby"
+                        },
+                        {
+                            "ID": 1,
+                            "maxWeight": 1,
+                            "position": {"x": 1, "y" : 1},
+                            "chargingBayPosition": {"x": 1, "y" : 1},
+                            "tasks":  [
+                                {
+                                    "ini": {"x": 1, "y" : 1},
+                                    "fin": {"x": 1, "y" : 1},
+                                    "ID": 1
+                                },
+                                {
+                                    "ini": {"x": 1, "y" : 1},
+                                    "fin": {"x": 1, "y" : 1},
+                                    "ID": 1
+                                }
+                            ],
+                            "state": {
+                                "state": "working",
+                                "task": {
+                                    "ini": {"x": 1, "y" : 1},
+                                    "fin": {"x": 1, "y" : 1},
+                                    "ID": 1
+                                },
+                                "route": [{"x": 1, "y" : 1},{"x": 1, "y" : 1},{"x": 1, "y" : 1}]
+                            }
+                        }
+                    ]
+                
+        }
+    },
+    "comment": "los caracteres del mapa son orientativos (al igual que todos los numeros), realmente son los numeros que dijimos en hexadecimal ... 0xALGO."
+}

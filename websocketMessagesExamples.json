@@ -14,25 +14,6 @@
             "taskID": 1
         }
     },
-    "endCurrentTask": {
-        "type": "endCurrentTask",
-        "content": {
-            "robotID": 1
-        }
-    },
-    "startTask": {
-        "type": "startTask",
-        "content": {
-            "robotID": 1
-        }
-    },
-    "updateRobotPosition": {
-        "type": "updateRobotPosition",
-        "content": {
-            "robotID": 1,
-            "position": {"x": 1, "y" : 1}
-        }
-    },
     "createRobot": {
         "type": "createRobot",
         "content": {
