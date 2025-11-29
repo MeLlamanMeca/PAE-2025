@@ -207,10 +207,10 @@ void AppAdapter::handleDeleteMap(const json& content) {
 void AppAdapter::handleIni(const json& content) {
     try {
         int mapID = content.at("mapID").get<int>();
-        auto map = app.getMap(mapID);
+        Map& map = app.getMap(mapID);
 
         json pois_array = json::array();
-        for (const auto& pair : map.getPOIs()) pois_array.push_back(pair.second.get());
+        for (const auto& pair : map.getPOIs()) pois_array.push_back(*pair.second);
 
         json robot_array = json::array();
         for (const auto& pair : map.getRobots()) robot_array.push_back(pair.second.get());

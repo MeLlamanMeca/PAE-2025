@@ -34,7 +34,7 @@ void App::createCommonZone(int mapID, Point tl, Point br) {
     serviceFactory.getMapService().createCommonZone(mapID, tl, br);
 }
 
-void App::createMap(int mapID, std::vector<std::vector<char>> map) {
+void App::createMap(int mapID, std::vector<std::vector<unsigned char>> map) {
     serviceFactory.getMapService().createMap(mapID, map);
 }
 
@@ -43,8 +43,7 @@ void App::createRobot(int mapID, Point position, int maxWeight){
     Robot& r = serviceFactory.getRobotService().createRobot(position, m, maxWeight);
     serviceFactory.getMapService().addRobot(mapID, r);
 
-    ChargingBayPOI poi(position);
-    serviceFactory.getMapService().addPoi(mapID, poi);
+    serviceFactory.getMapService().addPoi(mapID, std::make_unique<ChargingBayPOI>(position));
 }
 
 TaskAssignation App::createTask(int mapID, Point ini, Point fin) {
@@ -55,8 +54,7 @@ TaskAssignation App::createTask(int mapID, Point ini, Point fin) {
 }
 
 void App::createCommonPoi(int mapID, Point position, std::string name){
-    CommonPOI poi(position, name);
-    serviceFactory.getMapService().addPoi(mapID, poi);
+    serviceFactory.getMapService().addPoi(mapID, std::make_unique<CommonPOI>(position, name));
 }
 
 void App::deleteMap(int mapID) {/*no implementada*/}

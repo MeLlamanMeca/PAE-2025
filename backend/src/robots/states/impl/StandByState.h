@@ -26,7 +26,7 @@ class StandByState : public RobotState {
             if(tasks.empty()) throw std::logic_error("The robot has no tasks to start.");
 
             Task& task = tasks.front().get();
-            Map& map = robot.getMap();
+            const Map& map = robot.getMap();
             Point position = robot.getPosition();
             Point start = task.getIni();
             Point end = task.getFin();

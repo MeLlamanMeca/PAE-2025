@@ -28,9 +28,9 @@ TaskAssignation MapServiceImpl::assignTask(Task& task, int mapID) {
     return result;
 }
 
-void MapServiceImpl::addPoi(int mapID, POI& poi) {
+void MapServiceImpl::addPoi(int mapID, std::unique_ptr<POI> poi) {
     Map& map = controllerFactory.getMapController().get(mapID);
-    map.addPoi(poi);
+    map.addPoi(std::move(poi));
 }
 
 void MapServiceImpl::addRobot(int mapID, Robot& r) {
@@ -53,7 +53,7 @@ void MapServiceImpl::createCommonZone(int mapID, Point tl, Point br) {
     map.createCommonZone(tl, br);
 }
 
-Map& MapServiceImpl::createMap(int mapID, std::vector<std::vector<char>> map) {
+Map& MapServiceImpl::createMap(int mapID, std::vector<std::vector<unsigned char>> map) {
     return controllerFactory.getMapController().create(mapID, map);
 }
 

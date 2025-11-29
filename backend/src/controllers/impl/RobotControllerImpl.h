@@ -1,5 +1,6 @@
 #pragma once
 #include "../RobotController.h"
+#include "../../robots/states/impl/StandByState.h"
 
 class RobotControllerImpl : public RobotController {
     private:
@@ -17,8 +18,9 @@ class RobotControllerImpl : public RobotController {
             auto result = robots.emplace(std::piecewise_construct,
                         std::forward_as_tuple(id),
                         std::forward_as_tuple(position, id, map, maxWeight));
-
+            id++;
             if (!result.second) throw std::runtime_error("Robot ID already exists");
+            result.first->second.setState(std::make_unique<StandByState>());
             return result.first->second;
         }
 

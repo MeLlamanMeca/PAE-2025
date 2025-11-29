@@ -17,6 +17,7 @@ src/services/impl/MapServiceImpl.cpp
 src/services/impl/RobotServiceImpl.cpp
 src/services/impl/TaskServiceImpl.cpp
 src/common/Map.cpp
+src/robots/states/impl/WorkingState.cpp
 )
 
 target_link_libraries(server PRIVATE ixwebsocket::ixwebsocket nlohmann_json)

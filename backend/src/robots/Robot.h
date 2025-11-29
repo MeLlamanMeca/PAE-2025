@@ -23,14 +23,15 @@ class Robot {
         Map& map;
 
     public:
-        Robot(Point position, int ID, Map& map, int maxWeight) : chargingBayPosition(position), position(position), ID(ID), state(/*TODO poner estado standby por defecto*/), map(map), maxWeight(maxWeight) {}
+        Robot(Point position, int ID, Map& map, int maxWeight) 
+            : chargingBayPosition(position), position(position), ID(ID), map(map), maxWeight(maxWeight) {}
 
         // --- GETTERS (default) ---
         const std::list<std::reference_wrapper<Task>>& getTasks() const { return tasks; }
         int getID() const { return ID; }
         const Point& getPosition() const { return position; }
         const Point& getChargingBayPosition() const { return chargingBayPosition; }
-        Map& getMap() const { return map; }
+        const Map& getMap() const { return map; }
         const int getMaxWeight() const { return maxWeight; }
         RobotState& getState() const { return *state; }
 

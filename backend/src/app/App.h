@@ -29,7 +29,7 @@ class App {
         void createSlowZone(int mapID, Point tl, Point br);
         void createCommonZone(int mapID, Point tl, Point br);
 
-        void createMap(int mapID, std::vector<std::vector<char>> map);
+        void createMap(int mapID, std::vector<std::vector<unsigned char>> map);
         void deleteMap(int mapID);
 
         Task& getTask(int taskID);
