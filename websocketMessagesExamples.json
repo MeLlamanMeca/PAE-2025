@@ -26,5 +26,11 @@
         "content": {
             "robotID": 1
         }
+    },
+    "ini": {
+        "type": "ini",
+        "content": {
+            "mapID": 1
+        }
     }
 }
