@@ -1,26 +1,31 @@
 {
-    "createTask": {
+    "createTask": 
+    {
         "type": "createTask",
         "content": {
             "mapID": 1,
             "pointIni": {"x": 1, "y" : 1},
-            "pointFin": {"x": 2, "y" : 2}
+            "pointFin": {"x": 2, "y" : 2},
+            "weight": 5
         }
     },
-    "deleteTask": {
+    "deleteTask": 
+    {
         "type": "deleteTask",
         "content": {
             "robotID": 1,
             "taskID": 1
         }
     },
-    "ini": {
+    "ini": 
+    {
         "type": "ini",
         "content": {
             "mapID": 1
         }
     },
-    "createCommonPoi": {
+    "createCommonPoi": 
+    {
         "type": "createCommonPoi",
         "content": {
             "mapID": 1,
@@ -28,14 +33,16 @@
             "position": {"x": 2, "y" : 2}
         }
     },
-    "deletePoi": {
+    "deletePoi": 
+    {
         "type": "deletePoi",
         "content": {
             "mapID": 1,
             "position": {"x": 2, "y" : 2}
         }
     },
-    "createForbidenZone": {
+    "createForbidenZone": 
+    {
         "type": "createForbidenZone",
         "content": {
             "mapID": 1,
@@ -43,7 +50,8 @@
             "bottomRightPosition": {"x": 2, "y" : 2}
         }
     },
-    "createSlowZone": {
+    "createSlowZone": 
+    {
         "type": "createSlowZone",
         "content": {
             "mapID": 1,
@@ -51,7 +59,8 @@
             "bottomRightPosition": {"x": 2, "y" : 2}
         }
     },
-    "createCommonZone": {
+    "createCommonZone": 
+    {
         "type": "createCommonZone",
         "content": {
             "mapID": 1,

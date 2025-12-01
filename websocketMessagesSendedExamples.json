@@ -1,5 +1,6 @@
 {
-    "assignedTask": {
+    "assignedTask": 
+    {
         "type": "assignedTask",
         "content": {
             "robotID": 1,
