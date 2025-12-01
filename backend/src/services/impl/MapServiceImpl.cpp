@@ -111,7 +111,7 @@ TaskAssignation MapServiceImpl::taskAssigner(Map& map, Task& task) {
         maxDistancia = std::max(maxDistancia, double(dist));                // Distancia total tras la inserción 
 
         // Guardar resultado de inserción
-        InsertionResult res = {bestIndexResult.first, double(bestIndexResult.second), dist, robot.getDesgasteAcumulado()};
+        InsertionResult res = {bestIndexResult.first, double(bestIndexResult.second), dist, robot.getLoad()};
         insertionResults[robot.getID()] = res;
     }
 
@@ -144,7 +144,7 @@ TaskAssignation MapServiceImpl::taskAssigner(Map& map, Task& task) {
     }
 
     // Preparar resultado
-    if (bestRobot != -1) return TaskAssignation(bestRobot, bestIndex);
+    if (bestRobot != -1) return TaskAssignation(bestRobot, bestIndex, task.getID());
     throw std::runtime_error("No se ha encontrado robot disponible para asignar la tarea");
 }
 
