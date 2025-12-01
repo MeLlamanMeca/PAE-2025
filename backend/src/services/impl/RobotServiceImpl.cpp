@@ -15,16 +15,20 @@ void RobotServiceImpl::updateRobotPosition(int robotID, Point pos) {
     robot.setPosition(pos);
 }
 
-Robot& RobotServiceImpl::createRobot(Point position, Map& map) {
-    Robot& robot = controllerFactory.getRobotController().create(position, map);
+Robot& RobotServiceImpl::createRobot(Point position, Map& map, int maxWeight) {
+    Robot& robot = controllerFactory.getRobotController().create(position, map, maxWeight);
     return robot;
 }
 
-void RobotServiceImpl::deleteRobot(int robotID) {
-    // TODO: Implementar lógica de borrado
+Robot& RobotServiceImpl::deleteRobot(int robotID) {
+    throw std::logic_error("Not implemented");
 }
 
-TaskData RobotServiceImpl::startTask(int robotID) {
+Robot& RobotServiceImpl::getRobot(int robotID) {
+    return controllerFactory.getRobotController().get(robotID);
+}
+
+void RobotServiceImpl::startTask(int robotID) {
     Robot& robot = controllerFactory.getRobotController().get(robotID);
     return robot.startTask();
 }

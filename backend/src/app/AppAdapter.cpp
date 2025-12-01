@@ -1,63 +1,352 @@
 #include "AppAdapter.h"
 #include <iostream>
-
+#include "../common/Point.h"
+#include "../common/TaskAssignation.h"
+#include <string>
+using json = nlohmann::json;
 // ----------------------------------------------------------------------------------------
 // PRIVATE FUNCTIONS ----------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
-void AppAdapter::broadcastMessage(const nlohmann::json& msg) {
+void AppAdapter::broadcastMessage(const json& msg) {
     if (sendMessageCallback) sendMessageCallback(msg);
 }
 
-void AppAdapter::handleEndTask(const nlohmann::json& msg) {
-    // parsear el mensaje
-    // app.endTask(34,5)
-    // enviar mensaje al front con:
-    //     - nueva ruta
-    //     - id de la task asignada
+void AppAdapter::handleCreateTask(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto pointIni = content.at("PointIni");
+        auto pointFin = content.at("PointFin");
+        Point ini = Point(pointIni.at("x").get<int>(), pointIni.at("y").get<int>());
+        Point fin = Point(pointFin.at("x").get<int>(), pointFin.at("y").get<int>());
+
+        TaskAssignation result = app.createTask(mapID, ini, fin);
+        
+        json msg = {
+            {"type", "assignedTask"},
+            {"content", {
+                {"robotID", result.robotID},
+                {"position", result.position},
+                {"task", app.getTask(result.taskID)}
+            }}
+        };
+        sendMessageCallback(msg);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error parsing createTask message: " << e.what() << "\n";
+    }
 }
 
-void AppAdapter::handleCreateTask(const nlohmann::json& msg) {
-    // parsear el mensaje
-    // llamar a controller.createTask
-    // enviar mensaje al front con:
-    //     - nueva tarea creada
-    //     - robot asignado y posicion
+void AppAdapter::handleDeleteTask(const json& content) {
+    try {
+        int robotID = content.at("robotID").get<int>();
+        int taskID = content.at("taskID").get<int>();
+
+        app.deleteTask(robotID, taskID);
+
+        json msg = {
+            {"type", "deletedTask"},
+            {"content", {
+                {"robotID", robotID},
+                {"taskID", taskID}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleDeleteTask message: " << e.what() << "\n";
+    }
+    
 }
 
-void AppAdapter::handleDeleteTask(const nlohmann::json& msg) {
-//  TODO
+void AppAdapter::handleEndCurrentTask(const json& content) {
+    try {
+        int robotID = content.at("robotID").get<int>();
+
+        app.endCurrentTask(robotID);
+
+        json msg = {
+            {"type", "endCurrentTask"},
+            {"content", {
+                {"robotID", robotID}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleEndCurrentTask message: " << e.what() << "\n";
+    }
+    
 }
 
-void AppAdapter::handleUpdateRobotPosition(const nlohmann::json& msg) {
-    //  TODO
+void AppAdapter::handleStartTask(const json& content) {
+    try {
+        int robotID = content.at("robotID").get<int>();
+
+        app.startTask(robotID);
+        Task& t = app.getRobot(robotID).getActiveTask();
+        Route& r = app.getRobot(robotID).getActiveRoute();
+
+        //1 - Remove task from list
+        json msg = {
+            {"type", "deletedTask"},
+            {"content", {
+                {"robotID", robotID},
+                {"taskID", t.getID()}
+            }}
+        };
+        sendMessageCallback(msg);
+        //2 - Set task to active
+        json msg = {
+            {"type", "setActiveTask"},
+            {"content", {
+                {"robotID", robotID},
+                {"task", t},
+                {"route", r}
+            }}
+        };
+        sendMessageCallback(msg);
+
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleEndCurrentTask message: " << e.what() << "\n";
+    }
 }
 
+void AppAdapter::handleUpdateRobotPosition(const json& content) {
+    try {
+        int robotID = content.at("robotID").get<int>();
+        auto position = content.at("position");
+        Point point = Point(position.at("x").get<int>(), position.at("y").get<int>());
+
+        app.updateRobotPosition(robotID, point);
+
+        json msg = {
+            {"type", "moveRobot"},
+            {"content", {
+                {"robotID", robotID},
+                {"position", point}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleUpdateRobotPosition message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleCreateRobot(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        int maxWeight = content.at("maxWeight").get<int>();
+        auto position = content.at("position");
+        Point point = Point(position.at("x").get<int>(), position.at("y").get<int>());
+
+        app.createRobot(mapID, point, maxWeight);
+
+        //not implemented in live
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleCreateRobot message: " << e.what() << "\n";
+    }
+}
+void AppAdapter::handleDeleteRobot(const json& content) {
+    try {
+        int robotID = content.at("robotID").get<int>();
+
+        app.deleteRobot(robotID);
+
+        //not implemented
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleDeleteRobot message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleCreateCommonPoi(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto position = content.at("position");
+        Point point = Point(position.at("x").get<int>(), position.at("y").get<int>());
+        std::string name = content.at("name").get<std::string>();
+
+        app.createCommonPoi(mapID, point, name);
+
+        json msg = {
+            {"type", "createdPoi"},
+            {"content", {
+                {"type", "common"},
+                {"name", name},
+                {"position", point}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleCreateCommonPoi message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleDeletePoi(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto position = content.at("position");
+        Point point = Point(position.at("x").get<int>(), position.at("y").get<int>());
+
+        app.deletePoi(mapID, point);
+
+        json msg = {
+            {"type", "deletedPoi"},
+            {"content", {
+                {"position", point}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleCreateForbidenZone(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto tl = content.at("tl");
+        auto br = content.at("br");
+        Point tlPoint = Point(tl.at("x").get<int>(), tl.at("y").get<int>());
+        Point brPoint = Point(br.at("x").get<int>(), br.at("y").get<int>());
+
+        app.createForbidenZone(mapID, tlPoint, brPoint);
+
+        json msg = {
+            {"type", "createdZone"},
+            {"content", {
+                {"type", "forbiden"},
+                {"topleftPosition", tlPoint},
+                {"bottomRightPosition", brPoint}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleCreateSlowZone(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto tl = content.at("tl");
+        auto br = content.at("br");
+        Point tlPoint = Point(tl.at("x").get<int>(), tl.at("y").get<int>());
+        Point brPoint = Point(br.at("x").get<int>(), br.at("y").get<int>());
+
+        app.createSlowZone(mapID, tlPoint, brPoint);
+
+        json msg = {
+            {"type", "createdZone"},
+            {"content", {
+                {"type", "slow"},
+                {"topleftPosition", tlPoint},
+                {"bottomRightPosition", brPoint}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleCreateCommonZone(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        auto tl = content.at("tl");
+        auto br = content.at("br");
+        Point tlPoint = Point(tl.at("x").get<int>(), tl.at("y").get<int>());
+        Point brPoint = Point(br.at("x").get<int>(), br.at("y").get<int>());
+
+        app.createCommonZone(mapID, tlPoint, brPoint);
+
+        json msg = {
+            {"type", "createdZone"},
+            {"content", {
+                {"type", "common"},
+                {"topleftPosition", tlPoint},
+                {"bottomRightPosition", brPoint}
+            }}
+        };
+        sendMessageCallback(msg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
+    }
+}
+
+void AppAdapter::handleCreateMap(const json& content) {
+    //not available
+}
+
+void AppAdapter::handleDeleteMap(const json& content) {
+    //not available
+}
+void AppAdapter::handleIni(const json& content) {
+    try {
+        int mapID = content.at("mapID").get<int>();
+        Map& map = app.getMap(mapID);
+
+        json pois_array = json::array();
+        for (const auto& pair : map.getPOIs()) pois_array.push_back(*pair.second);
+
+        json robot_array = json::array();
+        for (const auto& pair : map.getRobots()) robot_array.push_back(pair.second.get());
+
+        json iniMsg = {
+            {"type", "ini"},
+            {"content", {
+                {"map", map.getMap()},
+                {"pois", pois_array},
+                {"robots", robot_array}
+            }}
+        };
+
+        sendMessageCallback(iniMsg);
+    }
+    catch (const std::exception& e){
+        std::cerr << "Error parsing handleIni message: " << e.what() << "\n";
+    }
+}
 // ----------------------------------------------------------------------------------------
 // PUBLIC FUNCTIONS -----------------------------------------------------------------------
 // ----------------------------------------------------------------------------------------
 
-void AppAdapter::setSendMessageCallback(std::function<void(const nlohmann::json&)> cb) {
+void AppAdapter::setSendMessageCallback(std::function<void(const json&)> cb) {
     sendMessageCallback = std::move(cb);
 }
 
-void AppAdapter::handleMessage(const nlohmann::json& msg) {
+
+
+void AppAdapter::handleMessage(const json& msg) {
     // confirma que el mensaje es un json con el formato correcto
     // llama a la funcion correcta según el "type" del json
+    std::cout << msg << std::endl;
     try {
         std::string type = msg.at("type").get<std::string>();
 
-        if (type == "createTask") {
-            handleCreateTask(msg);
-        } else if (type == "endTask") {
-            handleEndTask(msg);
-        } else if (type == "deleteTask") {
-            handleDeleteTask(msg);
-        } else if (type == "updateRobotPosition") {
-            handleUpdateRobotPosition(msg);
-        } else {
-            std::cerr << "Unknown message type: " << type << "\n";
-        }
+        if (type == "createTask") handleCreateTask(msg.at("content"));
+        else if (type == "endCurrentTask") handleEndCurrentTask(msg.at("content"));
+        else if (type == "deleteTask") handleDeleteTask(msg.at("content"));
+        else if (type == "updateRobotPosition") handleUpdateRobotPosition(msg.at("content"));
+        else if (type == "createRobot") handleCreateRobot(msg.at("content"));
+        else if (type == "deleteRobot") handleDeleteRobot(msg.at("content"));
+        else if (type == "createCommonPoi") handleCreateCommonPoi(msg.at("content"));
+        else if (type == "deletePoi") handleDeletePoi(msg.at("content"));
+        else if (type == "createForbidenZone") handleCreateForbidenZone(msg.at("content"));
+        else if (type == "createSlowZone") handleCreateSlowZone(msg.at("content"));
+        else if (type == "createCommonZone") handleCreateCommonZone(msg.at("content"));
+        else if (type == "ini") handleIni(msg.at("content"));
+        else std::cerr << "Unknown message type: " << type << "\n";
+        
     } catch (const std::exception& e) {
         std::cerr << "Error handling message: " << e.what() << "\n";
     }

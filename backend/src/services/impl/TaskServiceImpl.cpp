@@ -4,6 +4,10 @@ Task& TaskServiceImpl::createTask(Point ini, Point fin) {
     return controllerFactory.getTaskController().create(ini, fin);
 }
 
-void TaskServiceImpl::deleteTask(int taskID) {
-    controllerFactory.getTaskController().deleteTask(taskID);
+Task& TaskServiceImpl::deleteTask(int taskID) {
+    return controllerFactory.getTaskController().deleteTask(taskID);
+}
+
+Task& TaskServiceImpl::getTask(int taskID) {
+    return controllerFactory.getTaskController().get(taskID);
 }

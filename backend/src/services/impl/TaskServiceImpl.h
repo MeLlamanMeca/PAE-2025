@@ -13,5 +13,6 @@ public:
     TaskServiceImpl(ControllerFactory& cf) : controllerFactory(cf) {}
 
     Task& createTask(Point ini, Point fin) override;
-    void deleteTask(int taskID) override;
+    Task& deleteTask(int taskID) override;
+    Task& getTask(int taskID) override;
 };

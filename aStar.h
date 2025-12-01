@@ -7,9 +7,11 @@
 using namespace std;
 
 pair<vector<Point>, int> aStar(
-    const vector<vector<int>>& matrix,
-    Point inici,
-    Point fi
+    const vector<vector<int>>& mapa,
+    const vector<vector<Point>>& arrayRutes,
+    const vector<Point>& arrayPosicionsRobots,
+    Point posIni,
+    Point posFi
 );
 
 #endif

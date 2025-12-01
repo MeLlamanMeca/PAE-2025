@@ -152,8 +152,13 @@ TaskAssignation MapServiceImpl::taskAssigner(Map& map, Task& task) {
 
 //publics
 
-Map& MapServiceImpl::get(int mapID) {
+Map& MapServiceImpl::getMap(int mapID) {
     return controllerFactory.getMapController().get(mapID);
+}
+
+Map& MapServiceImpl::deleteMap(int mapID) {
+    throw std::logic_error("Not implemented");
+    //todo
 }
 
 TaskAssignation MapServiceImpl::assignTask(Task& task, int mapID) {
@@ -167,9 +172,9 @@ TaskAssignation MapServiceImpl::assignTask(Task& task, int mapID) {
     return result;
 }
 
-void MapServiceImpl::addPoi(int mapID, POI& poi) {
+void MapServiceImpl::addPoi(int mapID, std::unique_ptr<POI> poi) {
     Map& map = controllerFactory.getMapController().get(mapID);
-    map.addPoi(poi);
+    map.addPoi(std::move(poi));
 }
 
 void MapServiceImpl::addRobot(int mapID, Robot& r) {
@@ -192,8 +197,8 @@ void MapServiceImpl::createCommonZone(int mapID, Point tl, Point br) {
     map.createCommonZone(tl, br);
 }
 
-void MapServiceImpl::createMap(int mapID, std::vector<std::vector<char>> map) {
-    controllerFactory.getMapController().create(mapID, map);
+Map& MapServiceImpl::createMap(int mapID, std::vector<std::vector<unsigned char>> map) {
+    return controllerFactory.getMapController().create(mapID, map);
 }
 
 void MapServiceImpl::deletePoi(int mapID, Point position) {

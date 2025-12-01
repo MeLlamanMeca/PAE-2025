@@ -1,17 +1,17 @@
 #include "Map.h"
 #include <stdexcept>
 
-Route Map::aStar(const std::vector<std::vector<char>>& map, Point ini, Point fin) {
+Route Map::aStar(const std::vector<std::vector<unsigned char>>& map, Point ini, Point fin) {
     throw std::logic_error("aStar not yet implemented.");
 }
 
 // ---------------- GETTERS ----------------
 
-const std::vector<std::vector<char>>& Map::getMap() const {
+const std::vector<std::vector<unsigned char>>& Map::getMap() const {
     return map;
 }
 
-const std::unordered_map<int, std::reference_wrapper<POI>>& Map::getPOIs() const {
+const std::unordered_map<int, std::unique_ptr<POI>>& Map::getPOIs() const {
     return pointsOfInterest;
 }
 
@@ -53,14 +53,15 @@ void Map::addRobot(Robot& r) {
     robots.insert({id, r});
 }
 
-void Map::addPoi(POI& poi) {
-    poi.setID(pointsOfInterest.size());
-    pointsOfInterest.insert({poi.getID(), poi});
+void Map::addPoi(std::unique_ptr<POI> poi) {
+    if (!poi) return;
+    poi->setID(pointsOfInterest.size());
+    pointsOfInterest.insert({poi->getID(), std::move(poi)});
 }
 
 void Map::deletePoi(Point position) {
     for (auto it = pointsOfInterest.begin(); it != pointsOfInterest.end(); ++it) {
-        if (it->second.get().getPos() == position) {
+        if (it->second->getPos() == position) {
             pointsOfInterest.erase(it);
             return;
         }
@@ -82,7 +83,7 @@ void Map::createCommonZone(Point tl, Point br) {
     // TODO
 }
 
-TaskData startTask(Point start, Point end, Point robotPos) {
+Route Map::startTask(Point start, Point end, Point robotPos) const {
     // TODO
     //crear mapa temporal con caminos de robots
     //llamar a aStar(mapatemporal, robotPos, iniPos)

@@ -11,7 +11,7 @@ class MapControllerImpl : public MapController {
             else throw std::out_of_range("Map ID not found");
         }
 
-        Map& create(int mapID, std::vector<std::vector<char>> map) override {
+        Map& create(int mapID, std::vector<std::vector<unsigned char>> map) override {
             auto result = maps.emplace(mapID, Map(map));
             if (!result.second) throw std::invalid_argument("Map ID already exists");
             return result.first->second;

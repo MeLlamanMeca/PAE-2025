@@ -5,6 +5,6 @@
 class RobotController {
     public:
         virtual Robot& get(int robotID) = 0;
-        virtual Robot& create(Point position, Map& map) = 0;
+        virtual Robot& create(Point position, Map& map, int maxWeight) = 0;
         virtual void deleteRobot(int robotID) = 0;
 };

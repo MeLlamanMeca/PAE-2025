@@ -5,6 +5,7 @@
 class TaskService {
     public:
         virtual Task& createTask(Point ini, Point fin) = 0;
-        virtual void deleteTask(int taskID) = 0;
+        virtual Task& deleteTask(int taskID) = 0;
+        virtual Task& getTask(int taskID) = 0;
 
 };
