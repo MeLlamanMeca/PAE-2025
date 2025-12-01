@@ -5,11 +5,17 @@
 #include "../../common/Route.h"
 #include "../../POIs/POI.h"
 #include "../../POIs/POIType.h"
+#include "../../common/InsertionResult.h"
 #include <vector>
 
 class MapServiceImpl : public MapService {
     private:
         ControllerFactory& controllerFactory;
+
+        // ===== Privates: Asignación de tareas =====
+        static std::pair<int, int> findBestInsertionIndex(const Robot& robot, Task& newTask, Map& map);
+        static int calculateTotalTaskCost(const Robot& robot, const std::list<std::reference_wrapper<Task>>& tasks, Map& map);
+        static TaskAssignation taskAssigner(Map& map, Task& task);
 
     public:
         MapServiceImpl(ControllerFactory& cf) : controllerFactory(cf) {}

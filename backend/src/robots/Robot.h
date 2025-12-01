@@ -14,7 +14,7 @@ class Robot {
         Map& map;
         Point position;
         Point chargingBayPosition;
-        int load = 0;
+        double load = 0.0;
         std::unique_ptr<RobotState> state;
         std::list<std::reference_wrapper<Task>> tasks;
 
@@ -22,10 +22,11 @@ class Robot {
         Robot(Point position, int ID, Map& map) : chargingBayPosition(position), position(position), ID(ID), state(/*TODO poner estado standby por defecto*/), map(map){}
 
         // --- GETTERS (default) ---
-        const std::list<std::reference_wrapper<Task>>& getTasks() const { return tasks; }
+        const std::list<std::reference_wrapper<Task>> getTasks() const { return tasks; }
         int getID() const { return ID; }
         const Point& getPosition() const { return position; }
         const Map& getMap() const { return map; }
+        double getLoad() const { return load; }
 
         // --- SETTERS (default) ---
         void setState(std::unique_ptr<RobotState> newState) { state = std::move(newState); }
@@ -49,8 +50,9 @@ class Robot {
             });
         }
 
-        
+        bool canCarry(int weight) const {
+            return weight <= load;
+        }
 
-        
-        
+        // TODO: Actualizar desgaste acumulado
 };

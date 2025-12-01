@@ -28,7 +28,7 @@ public:
     const std::unordered_map<int, std::reference_wrapper<Robot>>& getRobots() const;
     Robot& getRobot(int robotID);
 
-    int getDistance(Point a, Point b);
+    int getDistance(const Point& a, const Point& b);
 
     void addRobot(Robot& r);
     void deleteRobot(int robotID);

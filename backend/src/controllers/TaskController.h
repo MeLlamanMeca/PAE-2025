@@ -5,6 +5,6 @@
 class TaskController {
     public:
         virtual Task& get(int taskID) = 0;
-        virtual Task& create(Point ini, Point fin) = 0;
+        virtual Task& create(Point ini, Point fin, int weight) = 0;
         virtual void deleteTask(int taskID) = 0;
 };
