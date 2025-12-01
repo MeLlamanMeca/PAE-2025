@@ -205,11 +205,15 @@ interface Task {
 interface POI {
   id: string
   name: string
+  position?: { x: number, y: number }
 }
 
 const props = defineProps<{
-  allTasksList: Task[]
+  allTasksList: Task[],
+  pois: any[]
 }>()
+
+const emit = defineEmits(['create-task', 'delete-task'])
 
 // Estado del modal
 const showTaskModal = ref(false)
@@ -223,20 +227,14 @@ const taskForm = ref({
   poiEnd: ''
 })
 
-// Lista de POIs disponibles (esto debería venir de props o del servidor)
-const availablePOIs = ref<POI[]>([
-  { id: '0', name: 'POI 0 - Turquesa' },
-  { id: '1', name: 'POI 1 - Tomate' },
-  { id: '2', name: 'POI 2 - Azul real' },
-  { id: '3', name: 'POI 3 - Naranja oscuro' },
-  { id: '4', name: 'POI 4 - Púrpura medio' },
-  { id: '5', name: 'POI 5 - Verde lima' },
-  { id: '6', name: 'POI 6 - Rosa profundo' },
-  { id: '7', name: 'POI 7 - Azul cielo profundo' },
-  { id: '8', name: 'POI 8 - Oro' },
-  { id: '9', name: 'POI 9 - Orquídea medio' },
-  { id: '10', name: 'POI 10 - Verde mar claro' },
-])
+// Lista de POIs disponibles
+const availablePOIs = computed(() => {
+  return props.pois.map(poi => ({
+    id: String(poi.id),
+    name: poi.name || `POI ${poi.id}`,
+    position: poi.position
+  }))
+})
 
 // Filtrar solo tareas pendientes
 const pendingTasks = computed(() => {
@@ -284,11 +282,23 @@ function saveTask() {
   if (editingTask.value) {
     // Editar tarea existente
     console.log('Editando tarea:', editingTask.value.id, taskForm.value)
-    // TODO: Enviar al servidor para actualizar
+    // TODO: Implementar edición si el backend lo soporta
   } else {
     // Crear nueva tarea
     console.log('Creando nueva tarea:', taskForm.value)
-    // TODO: Enviar al servidor para crear
+    
+    // Buscar coordenadas de los POIs seleccionados
+    const startPoi = props.pois.find(p => String(p.id) === taskForm.value.poiStart)
+    const endPoi = props.pois.find(p => String(p.id) === taskForm.value.poiEnd)
+    
+    if (startPoi && endPoi) {
+      emit('create-task', {
+        pointIni: startPoi.position,
+        pointFin: endPoi.position
+      })
+    } else {
+      console.error('POIs seleccionados no encontrados o sin posición')
+    }
   }
   closeTaskModal()
 }
@@ -297,7 +307,13 @@ function saveTask() {
 function deleteTask(taskId: string) {
   if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
     console.log('Eliminando tarea:', taskId)
-    // TODO: Enviar al servidor para eliminar
+    const task = props.allTasksList.find(t => t.id === taskId)
+    if (task) {
+      emit('delete-task', {
+        robotId: task.robotId,
+        taskId: taskId
+      })
+    }
   }
 }
 </script>

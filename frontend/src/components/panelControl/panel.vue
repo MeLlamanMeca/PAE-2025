@@ -48,7 +48,13 @@
     <!-- Contenido del panel activo -->
     <div class="p-5 sm:p-6 bg-white">
       <Transition name="fade" mode="out-in">
-        <PanelTasks v-if="activePanel === 'tasks'" :allTasksList="allTasksList" />
+        <PanelTasks 
+          v-if="activePanel === 'tasks'" 
+          :allTasksList="allTasksList" 
+          :pois="pois"
+          @create-task="$emit('create-task', $event)"
+          @delete-task="$emit('delete-task', $event)"
+        />
         <PanelPOI v-else />
       </Transition>
     </div>
@@ -70,8 +76,12 @@ interface Task {
 
 // Props
 defineProps<{
-  allTasksList: Task[]
+  allTasksList: Task[],
+  pois: any[]
 }>()
+
+// Emits
+defineEmits(['create-task', 'delete-task'])
 
 // Estado del panel activo
 const activePanel = ref<'tasks' | 'poi'>('tasks')

@@ -89,7 +89,12 @@
         </button>
         
         <div class="overflow-y-auto max-h-[90vh]">
-          <Panel :allTasksList="allTasksList" />
+          <Panel 
+            :allTasksList="allTasksList" 
+            :pois="pois"
+            @create-task="sendCreateTask"
+            @delete-task="sendDeleteTask"
+          />
         </div>
       </div>
     </div>
@@ -108,6 +113,7 @@ const connected = ref(false)
 const grid = ref<string[][]>([])
 const zones = ref<Record<string, string> | null>(null)
 const tasks = ref<Record<string, string[]> | null>(null)
+const pois = ref<any[]>([])
 const robotPaths = ref<Record<string, [number, number][]>>({});
 const robotPositions = ref<Record<string, [number, number]>>({});
 const robotInitialPositions = ref<Record<string, [number, number]>>({});
@@ -122,14 +128,14 @@ interface Task {
   name: string
   status: 'completed' | 'active' | 'pending'
   statusLabel: string
+  pointIni?: { x: number, y: number }
+  pointFin?: { x: number, y: number }
 }
 
 const allTasksList = ref<Task[]>([])
 const robotsList = ref<string[]>([])
 
 let ws: WebSocket | null = null
-const animationIntervals: Record<string, number> = {}
-const cleanupTimeouts: Record<string, number> = {}
 
 // Mapa de colores para cada número/zona
 const colorMap: Record<string, string> = {
@@ -173,6 +179,7 @@ function connectWebSocket() {
   ws.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data)
+      console.log('Received message type:', data.type, data.content)
       
       // Switch para manejar diferentes tipos de mensajes
       switch (data.type) {
@@ -186,6 +193,30 @@ function connectWebSocket() {
         
         case 'task':
          handleTaskPath(data.content)
+          break
+
+        case 'createTask':
+          handleCreateTask(data.content)
+          break
+
+        case 'deleteTask':
+          handleDeleteTask(data.content)
+          break
+
+        case 'createRobot':
+          handleCreateRobot(data.content)
+          break
+
+        case 'deleteRobot':
+          handleDeleteRobot(data.content)
+          break
+        
+        case 'moveRobot':
+          handleMoveRobot(data.content)
+          break
+
+        case 'assignedTask':
+          console.log('Task assigned:', data.content)
           break
         
         default:
@@ -212,13 +243,92 @@ function connectWebSocket() {
 // Inicializar el grid, zones y tasks
 function initialize(content: any) {
   console.log('Initializing with content:', content)
-  grid.value = content.grid
-  zones.value = content.zones
-  tasks.value = content.tasks
-  console.log('Grid, zones, and tasks set:', grid.value, zones.value, tasks.value);
+  
+  // Handle Map (support both 'map' and 'grid' properties)
+  if (content.map) {
+    grid.value = content.map.map((row: any[]) => row.map(cell => String(cell)))
+  } else if (content.grid) {
+    grid.value = content.grid
+  }
 
-  // Inicializar la lista de tareas desde el servidor
-  if (content.allTasks) {
+  // Handle Zones/POIs
+  if (content.pois) {
+    pois.value = content.pois
+    const newZones: Record<string, string> = {
+      '254': 'EMPTY',
+      '255': 'OUT_OF_BOUNDS',
+      '253': 'WALL',
+      '252': 'LowSpeedZone',
+      '251': 'ForbiddenZone'
+    }
+    content.pois.forEach((poi: any) => {
+      newZones[String(poi.id)] = poi.name || poi.type
+    })
+    zones.value = newZones
+  } else if (content.zones) {
+    zones.value = content.zones
+  }
+  
+  if (content.tasks) tasks.value = content.tasks
+  
+  console.log('Grid, zones, and tasks set');
+
+  // Handle Robots and Tasks from new format
+  if (content.robots) {
+    const newRobotsList: string[] = []
+    const newRobotPositions: Record<string, [number, number]> = {}
+    const newAllTasks: Task[] = []
+
+    content.robots.forEach((robot: any) => {
+      const robotId = String(robot.ID)
+      newRobotsList.push(robotId)
+      
+      // Position
+      if (robot.position) {
+        newRobotPositions[robotId] = [robot.position.y, robot.position.x]
+        robotInitialPositions.value[robotId] = [robot.position.y, robot.position.x]
+      }
+
+      // Tasks
+      if (robot.tasks) {
+        robot.tasks.forEach((t: any) => {
+          newAllTasks.push({
+            id: String(t.ID),
+            robotId: robotId,
+            name: `Tarea ${t.ID}`,
+            status: 'pending',
+            statusLabel: 'Pendiente',
+            pointIni: t.ini,
+            pointFin: t.fin
+          })
+        })
+      }
+
+      // State
+      if (robot.state) {
+        // Check if state is object and has task
+        if (typeof robot.state === 'object' && robot.state.task) {
+           const activeTaskId = String(robot.state.task.ID)
+           const task = newAllTasks.find(t => t.id === activeTaskId && t.robotId === robotId)
+           if (task) {
+             task.status = 'active'
+             task.statusLabel = 'En Progreso'
+           }
+           
+           // If there is a route in state, show it
+           if (robot.state.route) {
+             robotPaths.value[robotId] = robot.state.route.map((p: any) => [p.y, p.x])
+           }
+        }
+      }
+    })
+    
+    robotsList.value = newRobotsList.sort()
+    robotPositions.value = newRobotPositions
+    allTasksList.value = newAllTasks
+  } 
+  // Fallback for old format
+  else if (content.allTasks) {
     allTasksList.value = content.allTasks.map((task: any) => ({
       ...task,
       statusLabel: task.status === 'completed' ? 'Completada' : 
@@ -234,21 +344,105 @@ function initialize(content: any) {
     })
     robotsList.value = Array.from(uniqueRobots).sort()
     console.log('Robots list:', robotsList.value)
-  }
-
-  // Guardar posiciones iniciales de los robots si vienen en el mensaje
-  if (content.robots) {
-    // content.robots debe ser un objeto tipo { [robotId]: [fila, columna] }
-    robotInitialPositions.value = { ...content.robots }
-    // Inicializar robotPositions con las posiciones iniciales si no hay ruta activa
-    for (const [robotId, pos] of Object.entries(content.robots)) {
-      if (!robotPositions.value[robotId]) {
-        robotPositions.value[robotId] = pos as [number, number]
-      }
+    
+    // Guardar posiciones iniciales de los robots si vienen en el mensaje (old format)
+    if (content.robots) {
+        robotInitialPositions.value = { ...content.robots }
+        for (const [robotId, pos] of Object.entries(content.robots)) {
+        if (!robotPositions.value[robotId]) {
+            robotPositions.value[robotId] = pos as [number, number]
+        }
+        }
     }
   }
+}
 
-  // No llamar a drawGrid, el canvas lo gestiona Map.vue
+function handleMoveRobot(content: any) {
+  console.log('Handling moveRobot:', content)
+  const robotId = String(content.robotID)
+  if (content.position) {
+    // Update position directly
+    robotPositions.value[robotId] = [content.position.y, content.position.x]
+  }
+}
+
+function handleCreateTask(content: any) {
+  console.log('Handling createTask:', content)
+  // content: { mapID, pointIni, pointFin, robotID?, taskID? }
+  // Asumimos que el mensaje puede traer robotID y taskID aunque el ejemplo no lo muestre,
+  // o generamos valores temporales.
+  
+  const robotId = content.robotID ? String(content.robotID) : 'unknown'
+  const taskId = content.taskID ? String(content.taskID) : `task-${Date.now()}`
+  
+  const newTask: Task = {
+    id: taskId,
+    robotId: robotId,
+    name: `Tarea ${taskId}`,
+    status: 'pending',
+    statusLabel: 'Pendiente',
+    pointIni: content.pointIni,
+    pointFin: content.pointFin
+  }
+  
+  allTasksList.value.push(newTask)
+  
+  // Si es un robot nuevo, añadirlo a la lista
+  if (robotId !== 'unknown' && !robotsList.value.includes(robotId)) {
+    robotsList.value.push(robotId)
+    robotsList.value.sort()
+  }
+}
+
+function handleDeleteTask(content: any) {
+  console.log('Handling deleteTask:', content)
+  const { robotID, taskID } = content
+  // Convertir a string por si acaso vienen como números
+  const rId = String(robotID)
+  const tId = String(taskID)
+  
+  const index = allTasksList.value.findIndex(t => t.id === tId && t.robotId === rId)
+  if (index !== -1) {
+    allTasksList.value.splice(index, 1)
+  } else {
+    console.warn(`Task ${tId} for robot ${rId} not found`)
+  }
+}
+
+function handleCreateRobot(content: any) {
+  console.log('Handling createRobot:', content)
+  // content: { mapID, position: {x, y}, robotID? }
+  
+  if (content.robotID) {
+    const robotId = String(content.robotID)
+    if (!robotsList.value.includes(robotId)) {
+      robotsList.value.push(robotId)
+      robotsList.value.sort()
+    }
+    
+    if (content.position) {
+      // Asumiendo x=col, y=row. El mapa usa [row, col]
+      robotPositions.value[robotId] = [content.position.y, content.position.x]
+      robotInitialPositions.value[robotId] = [content.position.y, content.position.x]
+    }
+  } else {
+    console.warn('createRobot message missing robotID')
+  }
+}
+
+function handleDeleteRobot(content: any) {
+  console.log('Handling deleteRobot:', content)
+  const { robotID } = content
+  if (robotID) {
+    const rId = String(robotID)
+    robotsList.value = robotsList.value.filter(id => id !== rId)
+    delete robotPositions.value[rId]
+    delete robotPaths.value[rId]
+    delete robotInitialPositions.value[rId]
+    
+    // Opcional: eliminar tareas del robot eliminado
+    allTasksList.value = allTasksList.value.filter(t => t.robotId !== rId)
+  }
 }
 
 // Actualizar tareas
@@ -278,19 +472,7 @@ function handleTaskPath(content: any) {
     
     console.log(`${robotId} will follow path with ${path.length} points`)
     
-    // Detener animación previa si existe
-    if (animationIntervals[robotId]) {
-      clearInterval(animationIntervals[robotId])
-      delete animationIntervals[robotId]
-    }
-    
-    // Cancelar cualquier limpieza pendiente
-    if (cleanupTimeouts[robotId]) {
-      clearTimeout(cleanupTimeouts[robotId])
-      delete cleanupTimeouts[robotId]
-    }
-    
-    // Guardar la ruta completa
+    // Guardar la ruta completa para visualización
     robotPaths.value[robotId] = path
     
     // Guardar el nombre de la tarea activa
@@ -298,9 +480,6 @@ function handleTaskPath(content: any) {
     
     // Actualizar el estado de la tarea en la lista
     updateTaskStatus(taskName, 'active')
-    
-    // Iniciar la animación del robot
-    startRobotAnimation(robotId, path, taskName)
   }
 }
 
@@ -315,54 +494,37 @@ function updateTaskStatus(taskName: string, status: 'completed' | 'active' | 'pe
   }
 }
 
-// Animar el movimiento del robot a través de la ruta
-function startRobotAnimation(robotId: string, path: [number, number][], taskName: string) {
-  if (path.length === 0) return
-  let currentStep = 0
-  robotAnimating.value[robotId] = true
-  // Establecer posición inicial
-  robotPositions.value[robotId] = path[0]
-  // No llamar a drawGrid
-  // Animar cada paso (1 segundo por cuadrado)
-  animationIntervals[robotId] = window.setInterval(() => {
-    currentStep++
-    if (currentStep < path.length) {
-      // Mover el robot a la siguiente posición
-  robotPositions.value[robotId] = path[currentStep]
-  // No llamar a drawGrid
-    } else {
-      // Terminar la animación
-      clearInterval(animationIntervals[robotId])
-      delete animationIntervals[robotId]
-      robotAnimating.value[robotId] = false
-      // Marcar la tarea como completada
-      updateTaskStatus(taskName, 'completed')
-      // Notificar al servidor que terminó
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        const message = {
-          type: 'terminado',
-          robotId: robotId
-        }
-        ws.send(JSON.stringify(message))
-        console.log(`Robot ${robotId} finished path, sent terminado message`)
+function sendCreateTask(taskData: any) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const message = {
+      type: 'createTask',
+      content: {
+        mapID: 1, // Asumimos mapID 1 por defecto o lo sacamos de algún lado
+        pointIni: taskData.pointIni,
+        pointFin: taskData.pointFin
       }
-      // Limpiar la ruta visual después de un momento
-      cleanupTimeouts[robotId] = window.setTimeout(() => {
-        // Solo limpiar la ruta si no hay una nueva animación en curso
-        if (!animationIntervals[robotId]) {
-          // Limpiar solo el path, no la posición del robot
-          delete robotPaths.value[robotId]
-          // Mantener al robot en su última posición
-          // Si hay posición inicial definida, usarla, si no, mantener la última
-          if (robotInitialPositions.value[robotId]) {
-            robotPositions.value[robotId] = robotInitialPositions.value[robotId]
-          }
-          // NO eliminar robotPositions para que el robot siga visible
-        }
-        delete cleanupTimeouts[robotId]
-      }, 2000)
     }
-  }, 1000) // 1 segundo por cuadrado
+    ws.send(JSON.stringify(message))
+    console.log('Sent createTask:', message)
+  } else {
+    console.error('WebSocket not connected')
+  }
+}
+
+function sendDeleteTask(taskData: any) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const message = {
+      type: 'deleteTask',
+      content: {
+        robotID: taskData.robotId,
+        taskID: taskData.taskId
+      }
+    }
+    ws.send(JSON.stringify(message))
+    console.log('Sent deleteTask:', message)
+  } else {
+    console.error('WebSocket not connected')
+  }
 }
 
 onMounted(() => {
@@ -370,16 +532,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // Limpiar todos los intervalos de animación
-  Object.values(animationIntervals).forEach(interval => {
-    clearInterval(interval)
-  })
-  
-  // Limpiar todos los timeouts de limpieza
-  Object.values(cleanupTimeouts).forEach(timeout => {
-    clearTimeout(timeout)
-  })
-  
   if (ws) {
     ws.close()
   }
