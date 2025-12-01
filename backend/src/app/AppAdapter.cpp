@@ -22,7 +22,15 @@ void AppAdapter::handleCreateTask(const json& content) {
 
         TaskAssignation result = app.createTask(mapID, ini, fin);
         
-        //sendMessageCallback(/*todo*/) enviar datos de tarea + posicion
+        json msg = {
+            {"type", "assignedTask"},
+            {"content", {
+                {"robotID", result.robotID},
+                {"position", result.position},
+                {"task", app.getTask(result.taskID)}
+            }}
+        };
+        sendMessageCallback(msg);
 
     } catch (const std::exception& e) {
         std::cerr << "Error parsing createTask message: " << e.what() << "\n";
@@ -36,7 +44,14 @@ void AppAdapter::handleDeleteTask(const json& content) {
 
         app.deleteTask(robotID, taskID);
 
-        //sendConfirmation
+        json msg = {
+            {"type", "deletedTask"},
+            {"content", {
+                {"robotID", robotID},
+                {"taskID", taskID}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleDeleteTask message: " << e.what() << "\n";
@@ -50,7 +65,13 @@ void AppAdapter::handleEndCurrentTask(const json& content) {
 
         app.endCurrentTask(robotID);
 
-        //sendConfirmation
+        json msg = {
+            {"type", "endCurrentTask"},
+            {"content", {
+                {"robotID", robotID}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleEndCurrentTask message: " << e.what() << "\n";
@@ -63,9 +84,29 @@ void AppAdapter::handleStartTask(const json& content) {
         int robotID = content.at("robotID").get<int>();
 
         app.startTask(robotID);
-        //Task& t = app.getRobot(robotID).getCurrentTask();
-        //TODO
-        //sendremoveTask(taskID), sendActiveTask(robotID, taskInfo)
+        Task& t = app.getRobot(robotID).getActiveTask();
+        Route& r = app.getRobot(robotID).getActiveRoute();
+
+        //1 - Remove task from list
+        json msg = {
+            {"type", "deletedTask"},
+            {"content", {
+                {"robotID", robotID},
+                {"taskID", t.getID()}
+            }}
+        };
+        sendMessageCallback(msg);
+        //2 - Set task to active
+        json msg = {
+            {"type", "setActiveTask"},
+            {"content", {
+                {"robotID", robotID},
+                {"task", t},
+                {"route", r}
+            }}
+        };
+        sendMessageCallback(msg);
+
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleEndCurrentTask message: " << e.what() << "\n";
@@ -80,7 +121,14 @@ void AppAdapter::handleUpdateRobotPosition(const json& content) {
 
         app.updateRobotPosition(robotID, point);
 
-        //sendConfirmation
+        json msg = {
+            {"type", "moveRobot"},
+            {"content", {
+                {"robotID", robotID},
+                {"position", point}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleUpdateRobotPosition message: " << e.what() << "\n";
@@ -124,7 +172,15 @@ void AppAdapter::handleCreateCommonPoi(const json& content) {
 
         app.createCommonPoi(mapID, point, name);
 
-        //send poicreated()...
+        json msg = {
+            {"type", "createdPoi"},
+            {"content", {
+                {"type", "common"},
+                {"name", name},
+                {"position", point}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleCreateCommonPoi message: " << e.what() << "\n";
@@ -139,7 +195,13 @@ void AppAdapter::handleDeletePoi(const json& content) {
 
         app.deletePoi(mapID, point);
 
-        //send poideleted()...
+        json msg = {
+            {"type", "deletedPoi"},
+            {"content", {
+                {"position", point}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
@@ -156,7 +218,15 @@ void AppAdapter::handleCreateForbidenZone(const json& content) {
 
         app.createForbidenZone(mapID, tlPoint, brPoint);
 
-        //send forbidenZoneCreated()...
+        json msg = {
+            {"type", "createdZone"},
+            {"content", {
+                {"type", "forbiden"},
+                {"topleftPosition", tlPoint},
+                {"bottomRightPosition", brPoint}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
@@ -173,7 +243,15 @@ void AppAdapter::handleCreateSlowZone(const json& content) {
 
         app.createSlowZone(mapID, tlPoint, brPoint);
 
-        //send slowZoneCreated()...
+        json msg = {
+            {"type", "createdZone"},
+            {"content", {
+                {"type", "slow"},
+                {"topleftPosition", tlPoint},
+                {"bottomRightPosition", brPoint}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
@@ -190,7 +268,15 @@ void AppAdapter::handleCreateCommonZone(const json& content) {
 
         app.createCommonZone(mapID, tlPoint, brPoint);
 
-        //send CommonZoneCreated()...
+        json msg = {
+            {"type", "createdZone"},
+            {"content", {
+                {"type", "common"},
+                {"topleftPosition", tlPoint},
+                {"bottomRightPosition", brPoint}
+            }}
+        };
+        sendMessageCallback(msg);
     }
     catch (const std::exception& e){
         std::cerr << "Error parsing handleDeletePoi message: " << e.what() << "\n";
