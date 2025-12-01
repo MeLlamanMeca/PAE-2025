@@ -14,23 +14,49 @@
             "taskID": 1
         }
     },
-    "createRobot": {
-        "type": "createRobot",
-        "content": {
-            "mapID": 1,
-            "position": {"x": 1, "y" : 1}
-        }
-    },
-    "deleteRobot": {
-        "type": "deleteRobot",
-        "content": {
-            "robotID": 1
-        }
-    },
     "ini": {
         "type": "ini",
         "content": {
             "mapID": 1
+        }
+    },
+    "createCommonPoi": {
+        "type": "createCommonPoi",
+        "content": {
+            "mapID": 1,
+            "name": "name",
+            "position": {"x": 2, "y" : 2}
+        }
+    },
+    "deletePoi": {
+        "type": "deletePoi",
+        "content": {
+            "mapID": 1,
+            "position": {"x": 2, "y" : 2}
+        }
+    },
+    "createForbidenZone": {
+        "type": "createForbidenZone",
+        "content": {
+            "mapID": 1,
+            "topleftPosition": {"x": 2, "y" : 2},
+            "bottomRightPosition": {"x": 2, "y" : 2}
+        }
+    },
+    "createSlowZone": {
+        "type": "createSlowZone",
+        "content": {
+            "mapID": 1,
+            "topleftPosition": {"x": 2, "y" : 2},
+            "bottomRightPosition": {"x": 2, "y" : 2}
+        }
+    },
+    "createCommonZone": {
+        "type": "createCommonZone",
+        "content": {
+            "mapID": 1,
+            "topleftPosition": {"x": 2, "y" : 2},
+            "bottomRightPosition": {"x": 2, "y" : 2}
         }
     }
 }
