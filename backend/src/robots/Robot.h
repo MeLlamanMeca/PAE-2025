@@ -50,6 +50,7 @@ class Robot {
             auto it = tasks.begin();
             std::advance(it, position);
             tasks.insert(it, task);
+            load += task.getWeight()*map.getDistance(task.getIni(),task.getFin())/1000;
         }
 
         void deleteTask(int taskID) {
