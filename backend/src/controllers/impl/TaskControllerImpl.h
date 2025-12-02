@@ -13,12 +13,11 @@ class TaskControllerImpl : public TaskController {
             throw std::out_of_range("Task ID not found");
         }
 
-        Task& create(Point ini, Point fin) {
+        Task& create(Point ini, Point fin, int weight) {
             int taskID = id++;
             auto result = taskMap.emplace(std::piecewise_construct,
                 std::forward_as_tuple(taskID),
-                std::forward_as_tuple(ini, fin, taskID));
-
+                std::forward_as_tuple(ini, fin, weight, taskID));
             if (!result.second) throw std::runtime_error("Task ID already exists");
             return result.first->second;
         }

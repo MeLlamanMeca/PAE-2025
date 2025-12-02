@@ -16,8 +16,7 @@ class Robot {
         int maxWeight;
         Point position;
         Point chargingBayPosition;
-        int load = 0;
-        
+        double load = 0.0;
         std::unique_ptr<RobotState> state;
         std::list<std::reference_wrapper<Task>> tasks;
         Map& map;
@@ -27,14 +26,14 @@ class Robot {
             : chargingBayPosition(position), position(position), ID(ID), map(map), maxWeight(maxWeight) {}
 
         // --- GETTERS (default) ---
-        const std::list<std::reference_wrapper<Task>>& getTasks() const { return tasks; }
+        const std::list<std::reference_wrapper<Task>> getTasks() const { return tasks; }
         int getID() const { return ID; }
         const Point& getPosition() const { return position; }
         const Point& getChargingBayPosition() const { return chargingBayPosition; }
         const Map& getMap() const { return map; }
         const int getMaxWeight() const { return maxWeight; }
         RobotState& getState() const { return *state; }
-
+        double getLoad() const { return load; }
 
         // --- SETTERS (default) ---
         void setState(std::unique_ptr<RobotState> newState) { state = std::move(newState); }
@@ -50,6 +49,7 @@ class Robot {
             auto it = tasks.begin();
             std::advance(it, position);
             tasks.insert(it, task);
+            load += task.getWeight()*map.getDistance(task.getIni(),task.getFin())/1000;
         }
 
         void deleteTask(int taskID) {
@@ -58,7 +58,9 @@ class Robot {
             });
         }
 
-        int canHandle(int weight) const { return weight <= maxWeight; }
+        bool canCarry(int weight) const {
+            return weight <= load;
+        }
         Task& getActiveTask() const { return state->getActiveTask(); }
         Route& getActiveRoute() const { return state->getActiveRoute(); }
         bool isWorking() const { return (state->getState() == StateType::WORKING); }
