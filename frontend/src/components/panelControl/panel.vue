@@ -55,7 +55,12 @@
           @create-task="$emit('create-task', $event)"
           @delete-task="$emit('delete-task', $event)"
         />
-        <PanelPOI v-else />
+        <PanelPOI 
+          v-else 
+          :pois="pois"
+          @create-poi="$emit('create-poi', $event)"
+          @delete-poi="$emit('delete-poi', $event)"
+        />
       </Transition>
     </div>
   </div>
@@ -81,7 +86,7 @@ defineProps<{
 }>()
 
 // Emits
-defineEmits(['create-task', 'delete-task'])
+defineEmits(['create-task', 'delete-task', 'create-poi', 'delete-poi'])
 
 // Estado del panel activo
 const activePanel = ref<'tasks' | 'poi'>('tasks')

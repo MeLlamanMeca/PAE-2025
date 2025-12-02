@@ -50,10 +50,10 @@
           </div>
           
           <!-- Map in the center -->
-          <div class="order-3 lg:order-2 lg:col-span-6">
+          <div class="order-3 lg:order-2 lg:col-span-9">
             <Map
               :grid="grid"
-              :zones="zones"
+              :pois="pois"
               :robotPaths="robotPaths"
               :robotPositions="robotPositions"
               :robotInitialPositions="robotInitialPositions"
@@ -61,10 +61,7 @@
             />
           </div>
           
-          <!-- Zones on the right (hidden on mobile) -->
-          <div class="order-2 lg:order-3 lg:col-span-3 hidden lg:block">
-            <Zones :zones="zones" :colorMap="colorMap" />
-          </div>
+          <!-- Zones removed as per request -->
         </div>
 
         <!-- Robots section below -->
@@ -94,6 +91,8 @@
             :pois="pois"
             @create-task="sendCreateTask"
             @delete-task="sendDeleteTask"
+            @create-poi="sendCreateCommonPoi"
+            @delete-poi="sendDeletePoi"
           />
         </div>
       </div>
@@ -106,12 +105,10 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import Tasks from './components/principal/tasks.vue'
 import Robots from './components/principal/robots.vue'
 import Map from './components/principal/map.vue'
-import Zones from './components/principal/zones.vue'
 import Panel from './components/panelControl/panel.vue'
 
 const connected = ref(false)
 const grid = ref<string[][]>([])
-const zones = ref<Record<string, string> | null>(null)
 const tasks = ref<Record<string, string[]> | null>(null)
 const pois = ref<any[]>([])
 const robotPaths = ref<Record<string, [number, number][]>>({});
@@ -130,6 +127,7 @@ interface Task {
   statusLabel: string
   pointIni?: { x: number, y: number }
   pointFin?: { x: number, y: number }
+  weight?: number
 }
 
 const allTasksList = ref<Task[]>([])
@@ -174,6 +172,16 @@ function connectWebSocket() {
   ws.onopen = () => {
     connected.value = true
     console.log('WebSocket connected')
+    
+    // Solicitar inicialización
+    const iniRequest = {
+      type: 'ini',
+      content: {
+        mapID: 1
+      }
+    }
+    ws.send(JSON.stringify(iniRequest))
+    console.log('Sent ini request:', iniRequest)
   }
   
   ws.onmessage = (event) => {
@@ -187,36 +195,36 @@ function connectWebSocket() {
           initialize(data.content)
           break
         
-        case 'updateTask':
-         updateTask(data.content)
+        case 'assignedTask':
+          handleAssignedTask(data.content)
           break
         
-        case 'task':
-         handleTaskPath(data.content)
+        case 'deletedTask':
+          handleDeletedTask(data.content)
           break
 
-        case 'createTask':
-          handleCreateTask(data.content)
+        case 'endCurrentTask':
+          handleEndCurrentTask(data.content)
           break
 
-        case 'deleteTask':
-          handleDeleteTask(data.content)
-          break
-
-        case 'createRobot':
-          handleCreateRobot(data.content)
-          break
-
-        case 'deleteRobot':
-          handleDeleteRobot(data.content)
+        case 'setActiveTask':
+          handleSetActiveTask(data.content)
           break
         
         case 'moveRobot':
           handleMoveRobot(data.content)
           break
 
-        case 'assignedTask':
-          console.log('Task assigned:', data.content)
+        case 'createdPoi':
+          handleCreatedPoi(data.content)
+          break
+
+        case 'deletedPoi':
+          handleDeletedPoi(data.content)
+          break
+        
+        case 'createdZone':
+          console.log('Zone created:', data.content)
           break
         
         default:
@@ -251,27 +259,14 @@ function initialize(content: any) {
     grid.value = content.grid
   }
 
-  // Handle Zones/POIs
+  // Handle POIs
   if (content.pois) {
     pois.value = content.pois
-    const newZones: Record<string, string> = {
-      '254': 'EMPTY',
-      '255': 'OUT_OF_BOUNDS',
-      '253': 'WALL',
-      '252': 'LowSpeedZone',
-      '251': 'ForbiddenZone'
-    }
-    content.pois.forEach((poi: any) => {
-      newZones[String(poi.id)] = poi.name || poi.type
-    })
-    zones.value = newZones
-  } else if (content.zones) {
-    zones.value = content.zones
   }
   
   if (content.tasks) tasks.value = content.tasks
   
-  console.log('Grid, zones, and tasks set');
+  console.log('Grid and tasks set');
 
   // Handle Robots and Tasks from new format
   if (content.robots) {
@@ -299,7 +294,8 @@ function initialize(content: any) {
             status: 'pending',
             statusLabel: 'Pendiente',
             pointIni: t.ini,
-            pointFin: t.fin
+            pointFin: t.fin,
+            weight: t.weight
           })
         })
       }
@@ -357,129 +353,137 @@ function initialize(content: any) {
   }
 }
 
-function handleMoveRobot(content: any) {
-  console.log('Handling moveRobot:', content)
+function handleAssignedTask(content: any) {
+  console.log('Handling assignedTask:', content)
+  // content: { robotID, position, task: { ini, fin, ID } }
+  
   const robotId = String(content.robotID)
-  if (content.position) {
-    // Update position directly
-    robotPositions.value[robotId] = [content.position.y, content.position.x]
-  }
-}
+  const taskData = content.task
+  const taskId = String(taskData.ID)
+  
+  // Verificar si la tarea ya existe
+  const existingTask = allTasksList.value.find(t => t.id === taskId && t.robotId === robotId)
+  if (existingTask) return
 
-function handleCreateTask(content: any) {
-  console.log('Handling createTask:', content)
-  // content: { mapID, pointIni, pointFin, robotID?, taskID? }
-  // Asumimos que el mensaje puede traer robotID y taskID aunque el ejemplo no lo muestre,
-  // o generamos valores temporales.
-  
-  const robotId = content.robotID ? String(content.robotID) : 'unknown'
-  const taskId = content.taskID ? String(content.taskID) : `task-${Date.now()}`
-  
   const newTask: Task = {
     id: taskId,
     robotId: robotId,
     name: `Tarea ${taskId}`,
     status: 'pending',
     statusLabel: 'Pendiente',
-    pointIni: content.pointIni,
-    pointFin: content.pointFin
+    pointIni: taskData.ini,
+    pointFin: taskData.fin
   }
   
   allTasksList.value.push(newTask)
   
-  // Si es un robot nuevo, añadirlo a la lista
-  if (robotId !== 'unknown' && !robotsList.value.includes(robotId)) {
+  // Asegurar que el robot esté en la lista
+  if (!robotsList.value.includes(robotId)) {
     robotsList.value.push(robotId)
     robotsList.value.sort()
   }
 }
 
-function handleDeleteTask(content: any) {
-  console.log('Handling deleteTask:', content)
-  const { robotID, taskID } = content
-  // Convertir a string por si acaso vienen como números
-  const rId = String(robotID)
-  const tId = String(taskID)
+function handleDeletedTask(content: any) {
+  console.log('Handling deletedTask:', content)
+  // content: { robotID, taskID }
+  const rId = String(content.robotID)
+  const tId = String(content.taskID)
   
   const index = allTasksList.value.findIndex(t => t.id === tId && t.robotId === rId)
   if (index !== -1) {
     allTasksList.value.splice(index, 1)
-  } else {
-    console.warn(`Task ${tId} for robot ${rId} not found`)
   }
 }
 
-function handleCreateRobot(content: any) {
-  console.log('Handling createRobot:', content)
-  // content: { mapID, position: {x, y}, robotID? }
+function handleEndCurrentTask(content: any) {
+  console.log('Handling endCurrentTask:', content)
+  // content: { robotID }
+  const robotId = String(content.robotID)
   
-  if (content.robotID) {
-    const robotId = String(content.robotID)
-    if (!robotsList.value.includes(robotId)) {
-      robotsList.value.push(robotId)
-      robotsList.value.sort()
+  // Buscar la tarea activa de este robot y marcarla como completada o eliminarla
+  // Si queremos mantener historial, la marcamos completada. Si no, la borramos.
+  // Asumiremos que se completa.
+  const activeTaskName = activeTasks.value[robotId]
+  if (activeTaskName) {
+    updateTaskStatus(activeTaskName, 'completed')
+    delete activeTasks.value[robotId]
+    delete robotPaths.value[robotId]
+  }
+}
+
+function handleSetActiveTask(content: any) {
+  console.log('Handling setActiveTask:', content)
+  // content: { robotID, task: { ini, fin, ID }, route: [...] }
+  const robotId = String(content.robotID)
+  const taskData = content.task
+  const route = content.route
+  
+  // Actualizar ruta
+  if (route) {
+    robotPaths.value[robotId] = route.map((p: any) => [p.y, p.x])
+  }
+  
+  // Actualizar estado de la tarea
+  const taskId = String(taskData.ID)
+  const taskName = `Tarea ${taskId}`
+  
+  // Si la tarea no existe en la lista, añadirla (por si acaso)
+  let task = allTasksList.value.find(t => t.id === taskId && t.robotId === robotId)
+  if (!task) {
+    task = {
+      id: taskId,
+      robotId: robotId,
+      name: taskName,
+      status: 'active',
+      statusLabel: 'En Progreso',
+      pointIni: taskData.ini,
+      pointFin: taskData.fin
     }
-    
-    if (content.position) {
-      // Asumiendo x=col, y=row. El mapa usa [row, col]
-      robotPositions.value[robotId] = [content.position.y, content.position.x]
-      robotInitialPositions.value[robotId] = [content.position.y, content.position.x]
-    }
+    allTasksList.value.push(task)
   } else {
-    console.warn('createRobot message missing robotID')
+    task.status = 'active'
+    task.statusLabel = 'En Progreso'
+  }
+  
+  activeTasks.value[robotId] = taskName
+}
+
+function handleMoveRobot(content: any) {
+  console.log('Handling moveRobot:', content)
+  // content: { robotID, position: {x, y} }
+  const robotId = String(content.robotID)
+  if (content.position) {
+    robotPositions.value[robotId] = [content.position.y, content.position.x]
   }
 }
 
-function handleDeleteRobot(content: any) {
-  console.log('Handling deleteRobot:', content)
-  const { robotID } = content
-  if (robotID) {
-    const rId = String(robotID)
-    robotsList.value = robotsList.value.filter(id => id !== rId)
-    delete robotPositions.value[rId]
-    delete robotPaths.value[rId]
-    delete robotInitialPositions.value[rId]
-    
-    // Opcional: eliminar tareas del robot eliminado
-    allTasksList.value = allTasksList.value.filter(t => t.robotId !== rId)
-  }
+function handleCreatedPoi(content: any) {
+  console.log('Handling createdPoi:', content)
+  // content: { type, name, position: {x, y} }
+  
+  // Generar un ID temporal si no viene (el mensaje de ejemplo no trae ID explícito fuera de 'ini')
+  // Pero para el frontend necesitamos un ID único. Usaremos coordenadas o timestamp.
+  const tempId = `poi-${Date.now()}`
+  
+  pois.value.push({
+    id: tempId,
+    name: content.name || content.type,
+    position: content.position,
+    type: content.type
+  })
 }
 
-// Actualizar tareas
-function updateTask(content: any) {
-  console.log('Updating tasks:', content)
+function handleDeletedPoi(content: any) {
+  console.log('Handling deletedPoi:', content)
+  // content: { position: {x, y} }
   
-  if (content.tasks) {
-    tasks.value = content.tasks
-  }
-  
-  // Si el mensaje incluye cambios en el grid, actualizar
-  if (content.grid) {
-    grid.value = content.grid
-    // No llamar a drawGrid
-  }
-}
-
-// Manejar rutas de robots
-function handleTaskPath(content: any) {
-  console.log('Received task path:', content)
-  console.log('Path coordinates:', content.path)
-  
-  if (content.robotId && content.path) {
-    const robotId = content.robotId
-    const path = content.path
-    const taskName = content.taskName || 'Tarea sin nombre'
-    
-    console.log(`${robotId} will follow path with ${path.length} points`)
-    
-    // Guardar la ruta completa para visualización
-    robotPaths.value[robotId] = path
-    
-    // Guardar el nombre de la tarea activa
-    activeTasks.value[robotId] = taskName
-    
-    // Actualizar el estado de la tarea en la lista
-    updateTaskStatus(taskName, 'active')
+  if (content.position) {
+    const { x, y } = content.position
+    const index = pois.value.findIndex(p => p.position.x === x && p.position.y === y)
+    if (index !== -1) {
+      pois.value.splice(index, 1)
+    }
   }
 }
 
@@ -501,7 +505,8 @@ function sendCreateTask(taskData: any) {
       content: {
         mapID: 1, // Asumimos mapID 1 por defecto o lo sacamos de algún lado
         pointIni: taskData.pointIni,
-        pointFin: taskData.pointFin
+        pointFin: taskData.pointFin,
+        weight: taskData.weight
       }
     }
     ws.send(JSON.stringify(message))
@@ -522,6 +527,40 @@ function sendDeleteTask(taskData: any) {
     }
     ws.send(JSON.stringify(message))
     console.log('Sent deleteTask:', message)
+  } else {
+    console.error('WebSocket not connected')
+  }
+}
+
+function sendCreateCommonPoi(poiData: any) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const message = {
+      type: 'createCommonPoi',
+      content: {
+        mapID: 1,
+        name: poiData.name,
+        position: poiData.position, // {x, y}
+        color: poiData.color
+      }
+    }
+    ws.send(JSON.stringify(message))
+    console.log('Sent createCommonPoi:', message)
+  } else {
+    console.error('WebSocket not connected')
+  }
+}
+
+function sendDeletePoi(poiData: any) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const message = {
+      type: 'deletePoi',
+      content: {
+        mapID: 1,
+        position: poiData.position // {x, y}
+      }
+    }
+    ws.send(JSON.stringify(message))
+    console.log('Sent deletePoi:', message)
   } else {
     console.error('WebSocket not connected')
   }

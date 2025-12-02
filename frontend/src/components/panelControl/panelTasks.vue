@@ -85,106 +85,121 @@
     </div>
 
     <!-- Modal para crear/editar tarea -->
-    <div 
-      v-if="showTaskModal"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn"
-      @click.self="closeTaskModal"
-    >
-      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 relative transform transition-all animate-slideUp">
-        <!-- Botón cerrar -->
-        <button
-          @click="closeTaskModal"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-        
-        <!-- Título del modal -->
-        <div class="mb-6">
-          <h3 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+    <Teleport to="body">
+      <div 
+        v-if="showTaskModal"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn"
+        @click.self="closeTaskModal"
+      >
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 relative transform transition-all animate-slideUp">
+          <!-- Botón cerrar -->
+          <button
+            @click="closeTaskModal"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all duration-200"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
-            {{ editingTask ? 'Editar Tarea' : 'Añadir Nueva Tarea' }}
-          </h3>
+          </button>
+          
+          <!-- Título del modal -->
+          <div class="mb-6">
+            <h3 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+              </svg>
+              {{ editingTask ? 'Editar Tarea' : 'Añadir Nueva Tarea' }}
+            </h3>
+          </div>
+
+          <!-- Formulario -->
+          <form @submit.prevent="saveTask" class="space-y-5">
+            <!-- Nombre -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Nombre *</label>
+              <input
+                v-model="taskForm.name"
+                type="text"
+                required
+                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
+                :placeholder="editingTask ? editingTask.name : 'Nombre de la tarea'"
+              />
+            </div>
+
+            <!-- Descripción -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
+              <textarea
+                v-model="taskForm.description"
+                rows="3"
+                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 resize-none"
+                :placeholder="editingTask ? editingTask.description : 'Descripción de la tarea'"
+              ></textarea>
+            </div>
+
+            <!-- POI Inicio -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">POI Inicio *</label>
+              <select
+                v-model="taskForm.poiStart"
+                required
+                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
+              >
+                <option value="" disabled>Seleccionar POI</option>
+                <option v-for="poi in availablePOIs" :key="poi.id" :value="poi.id">
+                  {{ poi.id }} - {{ poi.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- POI Final -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">POI Final *</label>
+              <select
+                v-model="taskForm.poiEnd"
+                required
+                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
+              >
+                <option value="" disabled>Seleccionar POI</option>
+                <option v-for="poi in availablePOIs" :key="poi.id" :value="poi.id">
+                  {{ poi.id }} - {{ poi.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Peso -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Peso (kg) *</label>
+              <input
+                v-model.number="taskForm.weight"
+                type="number"
+                min="0"
+                required
+                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
+                placeholder="Peso de la carga"
+              />
+            </div>
+
+            <!-- Botones -->
+            <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                @click="closeTaskModal"
+                class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-all duration-200 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-sm transform hover:scale-105"
+              >
+                {{ editingTask ? 'Guardar Cambios' : 'Crear Tarea' }}
+              </button>
+            </div>
+          </form>
         </div>
-
-        <!-- Formulario -->
-        <form @submit.prevent="saveTask" class="space-y-5">
-          <!-- Nombre -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Nombre *</label>
-            <input
-              v-model="taskForm.name"
-              type="text"
-              required
-              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
-              :placeholder="editingTask ? editingTask.name : 'Nombre de la tarea'"
-            />
-          </div>
-
-          <!-- Descripción -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
-            <textarea
-              v-model="taskForm.description"
-              rows="3"
-              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 resize-none"
-              :placeholder="editingTask ? editingTask.description : 'Descripción de la tarea'"
-            ></textarea>
-          </div>
-
-          <!-- POI Inicio -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">POI Inicio *</label>
-            <select
-              v-model="taskForm.poiStart"
-              required
-              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
-            >
-              <option value="" disabled>Seleccionar POI</option>
-              <option v-for="poi in availablePOIs" :key="poi.id" :value="poi.id">
-                {{ poi.id }} - {{ poi.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- POI Final -->
-          <div>
-            <label class="block text-sm font-bold text-gray-700 mb-2">POI Final *</label>
-            <select
-              v-model="taskForm.poiEnd"
-              required
-              class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
-            >
-              <option value="" disabled>Seleccionar POI</option>
-              <option v-for="poi in availablePOIs" :key="poi.id" :value="poi.id">
-                {{ poi.id }} - {{ poi.name }}
-              </option>
-            </select>
-          </div>
-
-          <!-- Botones -->
-          <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              @click="closeTaskModal"
-              class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition-all duration-200 text-sm"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-sm transform hover:scale-105"
-            >
-              {{ editingTask ? 'Guardar Cambios' : 'Crear Tarea' }}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </Teleport>
   </div>
 </template>
 
@@ -198,6 +213,9 @@ interface Task {
   description?: string
   poiStart?: string
   poiEnd?: string
+  pointIni?: { x: number, y: number }
+  pointFin?: { x: number, y: number }
+  weight?: number
   status: 'completed' | 'active' | 'pending'
   statusLabel: string
 }
@@ -224,16 +242,23 @@ const taskForm = ref({
   name: '',
   description: '',
   poiStart: '',
-  poiEnd: ''
+  poiEnd: '',
+  weight: 0
 })
 
 // Lista de POIs disponibles
 const availablePOIs = computed(() => {
-  return props.pois.map(poi => ({
-    id: String(poi.id),
-    name: poi.name || `POI ${poi.id}`,
-    position: poi.position
-  }))
+  return props.pois
+    .filter(poi => {
+      const id = String(poi.id)
+      // Filtrar IDs estructurales (253=WALL, 254=EMPTY, 255=OUT_OF_BOUNDS)
+      return !['253', '254', '255','252','251'].includes(id)
+    })
+    .map(poi => ({
+      id: String(poi.id),
+      name: poi.name || `POI ${poi.id}`,
+      position: poi.position
+    }))
 })
 
 // Filtrar solo tareas pendientes
@@ -248,7 +273,8 @@ function openCreateTaskModal() {
     name: '',
     description: '',
     poiStart: '',
-    poiEnd: ''
+    poiEnd: '',
+    weight: 0
   }
   showTaskModal.value = true
 }
@@ -256,11 +282,27 @@ function openCreateTaskModal() {
 // Abrir modal para editar tarea
 function openEditTaskModal(task: Task) {
   editingTask.value = task
+  
+  // Buscar IDs de POIs basados en las coordenadas
+  let startPoiId = ''
+  let endPoiId = ''
+  
+  if (task.pointIni) {
+    const p = props.pois.find(poi => poi.position && poi.position.x === task.pointIni?.x && poi.position.y === task.pointIni?.y)
+    if (p) startPoiId = String(p.id)
+  }
+  
+  if (task.pointFin) {
+    const p = props.pois.find(poi => poi.position && poi.position.x === task.pointFin?.x && poi.position.y === task.pointFin?.y)
+    if (p) endPoiId = String(p.id)
+  }
+
   taskForm.value = {
     name: task.name,
     description: task.description || '',
-    poiStart: task.poiStart || '',
-    poiEnd: task.poiEnd || ''
+    poiStart: startPoiId,
+    poiEnd: endPoiId,
+    weight: task.weight || 0
   }
   showTaskModal.value = true
 }
@@ -273,32 +315,48 @@ function closeTaskModal() {
     name: '',
     description: '',
     poiStart: '',
-    poiEnd: ''
+    poiEnd: '',
+    weight: 0
   }
 }
 
 // Guardar tarea (crear o editar)
 function saveTask() {
+  // Buscar coordenadas de los POIs seleccionados
+  const startPoi = props.pois.find(p => String(p.id) === taskForm.value.poiStart)
+  const endPoi = props.pois.find(p => String(p.id) === taskForm.value.poiEnd)
+  
+  if (!startPoi || !endPoi) {
+    console.error('POIs seleccionados no encontrados o sin posición')
+    return
+  }
+
   if (editingTask.value) {
-    // Editar tarea existente
-    console.log('Editando tarea:', editingTask.value.id, taskForm.value)
-    // TODO: Implementar edición si el backend lo soporta
+    // Editar tarea existente: Eliminar y Crear nueva
+    console.log('Editando tarea (Delete + Create):', editingTask.value.id)
+    
+    // 1. Eliminar tarea anterior
+    emit('delete-task', {
+      robotId: editingTask.value.robotId,
+      taskId: editingTask.value.id
+    })
+
+    // 2. Crear nueva tarea con los datos actualizados
+    emit('create-task', {
+      pointIni: startPoi.position,
+      pointFin: endPoi.position,
+      weight: taskForm.value.weight
+    })
+
   } else {
     // Crear nueva tarea
     console.log('Creando nueva tarea:', taskForm.value)
     
-    // Buscar coordenadas de los POIs seleccionados
-    const startPoi = props.pois.find(p => String(p.id) === taskForm.value.poiStart)
-    const endPoi = props.pois.find(p => String(p.id) === taskForm.value.poiEnd)
-    
-    if (startPoi && endPoi) {
-      emit('create-task', {
-        pointIni: startPoi.position,
-        pointFin: endPoi.position
-      })
-    } else {
-      console.error('POIs seleccionados no encontrados o sin posición')
-    }
+    emit('create-task', {
+      pointIni: startPoi.position,
+      pointFin: endPoi.position,
+      weight: taskForm.value.weight
+    })
   }
   closeTaskModal()
 }

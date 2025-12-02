@@ -15,7 +15,7 @@ import { ref, onMounted, watch, nextTick } from 'vue'
 // Props que recibe el componente
 const props = defineProps<{
   grid: string[][]
-  zones: Record<string, string> | null
+  pois?: any[]
   robotPaths: Record<string, [number, number][]>
   robotPositions: Record<string, [number, number]>
   robotInitialPositions?: Record<string, [number, number]>
@@ -24,49 +24,90 @@ const props = defineProps<{
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 
-// Tamaño del canvas y escala
-const CANVAS_SIZE = 800 // Tamaño fijo del canvas en píxeles
-const CELL_SIZE = 20 // Tamaño de cada celda del grid en píxeles
-const ROBOT_SIZE = 12 // Tamaño del robot en píxeles
+// Configuración visual
+const MAX_CANVAS_SIZE = 800 // Tamaño máximo permitido
+const MIN_CELL_SIZE = 30    // Tamaño mínimo de celda para visibilidad
 
 function getColor(id: string): string {
   return props.colorMap[id] || '#' + Math.floor(Math.random()*16777215).toString(16)
 }
 
 function drawGrid() {
-  console.log('Dibujando grid y rutas de robots')
   const c = canvas.value
   if (!c || !props.grid.length) return
   const ctx = c.getContext('2d')!
   const rows = props.grid.length
   const cols = props.grid[0].length
   
-  // Establecer tamaño del canvas
-  c.width = CANVAS_SIZE
-  c.height = CANVAS_SIZE
+  // 1. Calcular tamaño de celda óptimo
+  // Queremos que sea lo más grande posible sin pasarnos del MAX_CANVAS_SIZE
+  const maxCellWidth = MAX_CANVAS_SIZE / cols
+  const maxCellHeight = MAX_CANVAS_SIZE / rows
+  const cellSize = Math.floor(Math.min(maxCellWidth, maxCellHeight))
   
-  // Calcular el tamaño de cada celda para que quepa todo el grid
-  const cellWidth = CANVAS_SIZE / cols
-  const cellHeight = CANVAS_SIZE / rows
+  // 2. Ajustar el tamaño del canvas exactamente a la matriz
+  c.width = cols * cellSize
+  c.height = rows * cellSize
   
+  // Limpiar
   ctx.clearRect(0, 0, c.width, c.height)
   
-  // Dibujar el grid
+  // 3. Dibujar el grid (fondo)
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
       const cellValue = props.grid[row][col]
+      const x = col * cellSize
+      const y = row * cellSize
+      
+      // Fondo de celda
       const color = getColor(cellValue)
       ctx.fillStyle = color
-      ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
+      ctx.fillRect(x, y, cellSize, cellSize)
       
-      // Borde de las celdas
-      ctx.strokeStyle = '#333'
-      ctx.lineWidth = 0.5
-      ctx.strokeRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
+      // Borde sutil
+      ctx.strokeStyle = 'rgba(0,0,0,0.1)'
+      ctx.lineWidth = 1
+      ctx.strokeRect(x, y, cellSize, cellSize)
     }
   }
+
+  // 4. Dibujar POIs (Puntos de Interés)
+  if (props.pois) {
+    props.pois.forEach(poi => {
+      if (poi.position) {
+        const col = poi.position.x
+        const row = poi.position.y
+        const x = col * cellSize
+        const y = row * cellSize
+        const color = getColor(String(poi.id))
+        
+        // Sombra para dar efecto de elevación
+        
+       
+        
+        // Dibujar POI con un margen interno
+        const padding = cellSize * 0.1
+        ctx.fillStyle = color
+        ctx.fillRect(x + padding, y + padding, cellSize - padding*2, cellSize - padding*2)
+        
+        // Borde blanco para resaltar
+       
+       // ctx.shadowColor = 'transparent'
+        //ctx.strokeStyle = '#fff'
+      //  ctx.lineWidth = 2
+       // ctx.strokeRect(x + padding, y + padding, cellSize - padding*2, cellSize - padding*2)
+        
+        // ID del POI
+        ctx.fillStyle = '#000'
+        ctx.font = `bold ${cellSize * 0.4}px Arial`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(String(poi.id), x + cellSize/2, y + cellSize/2)
+      }
+    })
+  }
   
-  // Dibujar rutas de robots con líneas fluidas
+  // 5. Dibujar rutas de robots
   const robotColors: Record<string, string> = {
     'robot1': '#FF00FF',
     'robot2': '#00FF00',
@@ -77,52 +118,33 @@ function drawGrid() {
     const color = robotColors[robotId] || '#FF0000'
     if (path.length === 0) return
     
-    ctx.globalAlpha = 0.5
-    ctx.strokeStyle = color
-    ctx.lineWidth = 4
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     
+    // Sombra suave para la ruta
+    
+    //ctx.shadowColor = color
+    //ctx.shadowBlur = 5
+    //ctx.globalAlpha = 0.6
+    
     ctx.beginPath()
+    ctx.strokeStyle = color
+    ctx.lineWidth = cellSize * 0.15 // Grosor proporcional
+    
     for (let i = 0; i < path.length; i++) {
       const [row, col] = path[i]
-      const x = col * cellWidth + cellWidth / 2
-      const y = row * cellHeight + cellHeight / 2
-      if (i === 0) {
-        ctx.moveTo(x, y)
-      } else {
-        ctx.lineTo(x, y)
-      }
+      const x = col * cellSize + cellSize / 2
+      const y = row * cellSize + cellSize / 2
+      if (i === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
     }
     ctx.stroke()
-    ctx.globalAlpha = 1.0
     
-    // Marcar puntos de inicio y fin de la ruta
-    path.forEach(([row, col], index) => {
-      const x = col * cellWidth + cellWidth / 2
-      const y = row * cellHeight + cellHeight / 2
-      
-      if (index === 0) {
-        // Punto de inicio
-        ctx.fillStyle = color
-        ctx.globalAlpha = 0.6
-        ctx.beginPath()
-        ctx.arc(x, y, Math.min(cellWidth, cellHeight) * 0.3, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.globalAlpha = 1.0
-      } else if (index === path.length - 1) {
-        // Punto de fin
-        ctx.fillStyle = color
-        ctx.globalAlpha = 0.8
-        ctx.beginPath()
-        ctx.arc(x, y, Math.min(cellWidth, cellHeight) * 0.35, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.globalAlpha = 1.0
-      }
-    })
+    ctx.globalAlpha = 1.0
+    ctx.shadowBlur = 0
   })
   
-  // Dibujar robots
+  // 6. Dibujar robots (con gradientes y efectos)
   const allRobotIds = new Set([
     ...Object.keys(props.robotInitialPositions || {}),
     ...Object.keys(props.robotPositions)
@@ -132,56 +154,52 @@ function drawGrid() {
     const position = props.robotPositions[robotId] || (props.robotInitialPositions && props.robotInitialPositions[robotId])
     if (!Array.isArray(position) || position.length !== 2) return
     
-    const color = robotColors[robotId] || '#FF0000'
+    const baseColor = robotColors[robotId] || '#FF0000'
     const [row, col] = position
     
-    // Posición centrada en la celda
-    const x = col * cellWidth + cellWidth / 2
-    const y = row * cellHeight + cellHeight / 2
+    const x = col * cellSize + cellSize / 2
+    const y = row * cellSize + cellSize / 2
+    const radius = cellSize * 0.35
     
-    // Tamaño del robot proporcional al tamaño de celda
-    const robotRadius = Math.min(cellWidth, cellHeight) * 0.4
-    
-    // Dibujar sombra
+    // Sombra del robot
     ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
-    ctx.shadowBlur = 8
-    ctx.shadowOffsetX = 2
-    ctx.shadowOffsetY = 2
+    ctx.shadowBlur = 10
+    ctx.shadowOffsetY = 4
     
-    // Cuerpo del robot
-    ctx.fillStyle = color
+    // Gradiente radial para efecto 3D
+    const gradient = ctx.createRadialGradient(x - radius/3, y - radius/3, radius/10, x, y, radius)
+    gradient.addColorStop(0, '#FFFFFF') // Brillo especular
+    gradient.addColorStop(0.3, baseColor)
+    gradient.addColorStop(1, '#000000') // Borde oscuro
+    
+    ctx.fillStyle = gradient
     ctx.beginPath()
-    ctx.arc(x, y, robotRadius, 0, 2 * Math.PI)
+    ctx.arc(x, y, radius, 0, 2 * Math.PI)
     ctx.fill()
     
+    // Resetear sombras
     ctx.shadowColor = 'transparent'
+    ctx.shadowBlur = 0
+    ctx.shadowOffsetY = 0
     
-    // Borde blanco
+    // Anillo exterior blanco
     ctx.strokeStyle = '#FFFFFF'
-    ctx.lineWidth = 3
-    ctx.stroke()
-    
-    // Borde negro fino
-    ctx.strokeStyle = '#000000'
-    ctx.lineWidth = 1.5
+    ctx.lineWidth = 2
     ctx.stroke()
     
     // Número del robot
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = `bold ${robotRadius * 0.8}px Arial`
+    ctx.font = `bold ${radius}px Arial`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)'
+    // Sombra texto
+    ctx.shadowColor = 'rgba(0,0,0,0.8)'
     ctx.shadowBlur = 2
     
     const robotNumber = robotId.replace('robot', '')
     ctx.fillText(robotNumber, x, y)
     
-    // Limpiar sombras
-    ctx.shadowColor = 'transparent'
     ctx.shadowBlur = 0
-    ctx.shadowOffsetX = 0
-    ctx.shadowOffsetY = 0
   })
 }
 
@@ -189,7 +207,7 @@ onMounted(() => {
   nextTick(drawGrid)
 })
 
-watch(() => [props.grid, props.robotPaths, props.robotPositions], () => {
+watch(() => [props.grid, props.robotPaths, props.robotPositions, props.pois], () => {
   nextTick(drawGrid)
 }, { deep: true })
 </script>
