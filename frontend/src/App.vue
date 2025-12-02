@@ -91,7 +91,7 @@
             :pois="pois"
             @create-task="sendCreateTask"
             @delete-task="sendDeleteTask"
-            @create-poi="sendCreateCommonPoi"
+            @create-poi="handleCreatePoi"
             @delete-poi="sendDeletePoi"
           />
         </div>
@@ -360,22 +360,27 @@ function handleAssignedTask(content: any) {
   const robotId = String(content.robotID)
   const taskData = content.task
   const taskId = String(taskData.ID)
+  const position = content.position // Posición en la lista donde debe ir la tarea
   
-  // Verificar si la tarea ya existe
-  const existingTask = allTasksList.value.find(t => t.id === taskId && t.robotId === robotId)
-  if (existingTask) return
-
   const newTask: Task = {
     id: taskId,
     robotId: robotId,
-    name: `Tarea ${taskId}`,
+    name: `${taskData.ini.x},${taskData.ini.y} -> ${taskData.fin.x},${taskData.fin.y}`,
     status: 'pending',
     statusLabel: 'Pendiente',
     pointIni: taskData.ini,
     pointFin: taskData.fin
   }
   
-  allTasksList.value.push(newTask)
+  // Si la posición está dentro del rango del array, reemplazar usando splice para reactividad
+  // Si no, agregar al final
+  if (position >= 0 && position < allTasksList.value.length) {
+    allTasksList.value.splice(position, 1, newTask)
+    console.log('Replaced task at position:', position)
+  } else {
+    allTasksList.value.push(newTask)
+    console.log('Added new task at the end')
+  }
   
   // Asegurar que el robot esté en la lista
   if (!robotsList.value.includes(robotId)) {
@@ -547,6 +552,32 @@ function sendCreateCommonPoi(poiData: any) {
     console.log('Sent createCommonPoi:', message)
   } else {
     console.error('WebSocket not connected')
+  }
+}
+
+function sendCreateChargingBayPoi(poiData: any) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    const message = {
+      type: 'createChargingBayPoi',
+      content: {
+        mapID: 1,
+        name: poiData.name,
+        position: poiData.position, // {x, y}
+        color: poiData.color
+      }
+    }
+    ws.send(JSON.stringify(message))
+    console.log('Sent createChargingBayPoi:', message)
+  } else {
+    console.error('WebSocket not connected')
+  }
+}
+
+function handleCreatePoi(poiData: any) {
+  if (poiData.type === 'chargingBay') {
+    sendCreateChargingBayPoi(poiData)
+  } else {
+    sendCreateCommonPoi(poiData)
   }
 }
 

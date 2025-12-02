@@ -145,6 +145,26 @@
               />
             </div>
 
+            <!-- Tipo de POI -->
+            <div>
+              <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de POI *</label>
+              <select
+                v-model="poiForm.type"
+                required
+                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm transition-all duration-200 bg-white cursor-pointer"
+              >
+                <option value="common">Common (Azul)</option>
+                <option value="chargingBay">Charging Bay (Amarillo)</option>
+              </select>
+              <div class="mt-2 flex items-center gap-2">
+                <span 
+                  class="w-6 h-6 rounded border-2 border-gray-800"
+                  :style="{ backgroundColor: poiForm.type === 'common' ? '#3B82F6' : '#FBBF24' }"
+                ></span>
+                <span class="text-xs text-gray-500">Color automático según el tipo</span>
+              </div>
+            </div>
+
             <!-- Ubicación -->
             <div>
               <label class="block text-sm font-bold text-gray-700 mb-2">Ubicación (Coordenadas) *</label>
@@ -177,33 +197,6 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span>Tip: Click en el mapa para seleccionar coordenadas</span>
-              </div>
-            </div>
-
-            <!-- Color -->
-            <div>
-              <label class="block text-sm font-bold text-gray-700 mb-2">Color *</label>
-              <div class="flex items-center gap-3">
-                <input
-                  v-model="poiForm.color"
-                  type="color"
-                  required
-                  class="w-16 h-12 border-2 border-gray-300 rounded-lg cursor-pointer shadow-sm"
-                />
-                <input
-                  v-model="poiForm.color"
-                  type="text"
-                  required
-                  pattern="^#[0-9A-Fa-f]{6}$"
-                  class="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm font-mono transition-all duration-200"
-                  placeholder="#00CED1"
-                />
-              </div>
-              <div class="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Color en formato hexadecimal (ej: #00CED1)</span>
               </div>
             </div>
 
@@ -257,11 +250,12 @@ const editingPOI = ref<POI | null>(null)
 const poiForm = ref({
   id: '',
   name: '',
+  type: 'common' as 'common' | 'chargingBay',
   location: {
     row: 0,
     col: 0
   },
-  color: '#00CED1'
+  color: '#3B82F6'
 })
 
 // Lista de POIs filtrada y mapeada
@@ -291,11 +285,12 @@ function openCreatePOIModal() {
   poiForm.value = {
     id: '',
     name: '',
+    type: 'common',
     location: {
       row: 0,
       col: 0
     },
-    color: '#00CED1'
+    color: '#3B82F6'
   }
   showPOIModal.value = true
 }
@@ -306,6 +301,7 @@ function openEditPOIModal(poi: POI) {
   poiForm.value = {
     id: poi.id,
     name: poi.name,
+    type: 'common', // TODO: obtener del POI si está disponible
     location: { ...poi.location },
     color: poi.color
   }
@@ -319,11 +315,12 @@ function closePOIModal() {
   poiForm.value = {
     id: '',
     name: '',
+    type: 'common',
     location: {
       row: 0,
       col: 0
     },
-    color: '#00CED1'
+    color: '#3B82F6'
   }
 }
 
@@ -337,13 +334,17 @@ function savePOI() {
     // Crear nuevo POI
     console.log('Creando nuevo POI:', poiForm.value)
     
+    // Determinar color según el tipo
+    const color = poiForm.value.type === 'common' ? '#3B82F6' : '#FBBF24'
+    
     emit('create-poi', {
+      type: poiForm.value.type,
       name: poiForm.value.name,
       position: {
         x: poiForm.value.location.col,
         y: poiForm.value.location.row
       },
-      color: poiForm.value.color
+      color: color
     })
   }
   closePOIModal()

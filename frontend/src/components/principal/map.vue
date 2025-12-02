@@ -79,30 +79,29 @@ function drawGrid() {
         const row = poi.position.y
         const x = col * cellSize
         const y = row * cellSize
-        const color = getColor(String(poi.id))
         
-        // Sombra para dar efecto de elevación
+        // Determinar color según el tipo de POI
+        let color
+        if (poi.type === 'chargingbay') {
+          console.log('Dibujando charging bay en', x, y)
+          color = '#FBBF24' // Amarillo para charging bay
+        } else {
+          color = '#3B82F6' // Azul para common
+        }
         
-       
+        // Si el POI tiene color definido, usarlo (prioridad)
+        if (poi.color) {
+          color = poi.color
+        }
         
-        // Dibujar POI con un margen interno
-        const padding = cellSize * 0.1
+        // Pintar el pixel/celda completo
         ctx.fillStyle = color
-        ctx.fillRect(x + padding, y + padding, cellSize - padding*2, cellSize - padding*2)
+        ctx.fillRect(x, y, cellSize, cellSize)
         
-        // Borde blanco para resaltar
-       
-       // ctx.shadowColor = 'transparent'
-        //ctx.strokeStyle = '#fff'
-      //  ctx.lineWidth = 2
-       // ctx.strokeRect(x + padding, y + padding, cellSize - padding*2, cellSize - padding*2)
-        
-        // ID del POI
-        ctx.fillStyle = '#000'
-        ctx.font = `bold ${cellSize * 0.4}px Arial`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.fillText(String(poi.id), x + cellSize/2, y + cellSize/2)
+        // Borde para delimitar la celda
+        ctx.strokeStyle = '#000'
+        ctx.lineWidth = 2
+        ctx.strokeRect(x, y, cellSize, cellSize)
       }
     })
   }

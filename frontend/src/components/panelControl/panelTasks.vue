@@ -114,27 +114,11 @@
 
           <!-- Formulario -->
           <form @submit.prevent="saveTask" class="space-y-5">
-            <!-- Nombre -->
-            <div>
-              <label class="block text-sm font-bold text-gray-700 mb-2">Nombre *</label>
-              <input
-                v-model="taskForm.name"
-                type="text"
-                required
-                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200"
-                :placeholder="editingTask ? editingTask.name : 'Nombre de la tarea'"
-              />
-            </div>
-
-            <!-- Descripción -->
-            <div>
-              <label class="block text-sm font-bold text-gray-700 mb-2">Descripción</label>
-              <textarea
-                v-model="taskForm.description"
-                rows="3"
-                class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all duration-200 resize-none"
-                :placeholder="editingTask ? editingTask.description : 'Descripción de la tarea'"
-              ></textarea>
+            <!-- Nombre auto-generado - Solo mostrar, no editable -->
+            <div v-if="generatedTaskName" class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+              <label class="block text-sm font-bold text-gray-700 mb-2">Nombre de la Tarea</label>
+              <p class="text-lg font-semibold text-blue-700">{{ generatedTaskName }}</p>
+              <p class="text-xs text-gray-500 mt-1">Se genera automáticamente según los POIs seleccionados</p>
             </div>
 
             <!-- POI Inicio -->
@@ -261,6 +245,22 @@ const availablePOIs = computed(() => {
     }))
 })
 
+// Nombre generado automáticamente
+const generatedTaskName = computed(() => {
+  if (!taskForm.value.poiStart || !taskForm.value.poiEnd) {
+    return ''
+  }
+  
+  const startPoi = props.pois.find(p => String(p.id) === taskForm.value.poiStart)
+  const endPoi = props.pois.find(p => String(p.id) === taskForm.value.poiEnd)
+  
+  if (!startPoi?.position || !endPoi?.position) {
+    return ''
+  }
+  
+  return `${startPoi.position.x},${startPoi.position.y} -> ${endPoi.position.x},${endPoi.position.y}`
+})
+
 // Filtrar solo tareas pendientes
 const pendingTasks = computed(() => {
   return props.allTasksList.filter(task => task.status === 'pending')
@@ -335,10 +335,10 @@ function saveTask() {
     // Editar tarea existente: Eliminar y Crear nueva
     console.log('Editando tarea (Delete + Create):', editingTask.value.id)
     
-    // 1. Eliminar tarea anterior
+    // 1. Eliminar tarea anterior (convertir taskId a número)
     emit('delete-task', {
-      robotId: editingTask.value.robotId,
-      taskId: editingTask.value.id
+      robotId: Number(editingTask.value.robotId),
+      taskId: Number(editingTask.value.id)
     })
 
     // 2. Crear nueva tarea con los datos actualizados
@@ -367,9 +367,10 @@ function deleteTask(taskId: string) {
     console.log('Eliminando tarea:', taskId)
     const task = props.allTasksList.find(t => t.id === taskId)
     if (task) {
+      // Convertir IDs a números
       emit('delete-task', {
-        robotId: task.robotId,
-        taskId: taskId
+        robotId: Number(task.robotId),
+        taskId: Number(taskId)
       })
     }
   }
