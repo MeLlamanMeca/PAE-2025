@@ -93,7 +93,7 @@ wss.on('connection', (ws) => {
                 "state": {
                     "state": "working", 
                     "task": { "ini": {"x": 1, "y" : 1}, "fin": {"x": 1, "y" : 5}, "ID": 1 }, 
-                    "route": [{"x": 1, "y" : 1},{"x": 1, "y" : 2},{"x": 1, "y" : 3}]
+                    "route": [{"x": 1, "y" : 1},{"x": 1, "y" : 1},{"x": 1, "y" : 1}]
                 },
                 "tasks": []}
             ]
@@ -103,6 +103,35 @@ wss.on('connection', (ws) => {
 
     ws.send(JSON.stringify(iniMessage));
     console.log('Sent ini message');
+
+    // Enviar setActiveTask 3 segundos después del ini
+    setTimeout(() => {
+      const setActiveTaskMessage = {
+        "type": "setActiveTask",
+        "content": {
+          "robotID": 1,
+          "task": {
+            "ini": {"x": 5, "y": 5},
+            "fin": {"x": 2, "y": 10},
+            "ID": 100
+          },
+          "route": [
+            {"x": 5, "y": 5},
+            {"x": 5, "y": 6},
+            {"x": 5, "y": 7},
+            {"x": 4, "y": 7},
+            {"x": 3, "y": 7},
+            {"x": 2, "y": 7},
+            {"x": 2, "y": 8},
+            {"x": 2, "y": 9},
+            {"x": 2, "y": 10}
+          ]
+        }
+      };
+      
+      ws.send(JSON.stringify(setActiveTaskMessage));
+      console.log('Sent setActiveTask message');
+    }, 3000);
 
     // Enviar primera ruta para robot1 después del ini
     setTimeout(() => {
