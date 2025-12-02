@@ -140,7 +140,7 @@ function drawGrid() {
     }
     ctx.stroke()
     
-    ctx.globalAlpha = 1.0
+    ctx.globalAlpha = 1.0 
     ctx.shadowBlur = 0
   })
   
