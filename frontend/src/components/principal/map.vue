@@ -75,8 +75,9 @@ function drawGrid() {
   if (props.pois) {
     props.pois.forEach(poi => {
       if (poi.position) {
-        const col = poi.position.x
-        const row = poi.position.y
+        // x es la fila, y es la columna
+        const row = poi.position.x
+        const col = poi.position.y
         const x = col * cellSize
         const y = row * cellSize
         

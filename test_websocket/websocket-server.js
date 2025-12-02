@@ -92,8 +92,8 @@ wss.on('connection', (ws) => {
                 {"ID": 0, "chargingBayPosition": {"x": 2, "y": 2}, "maxWeight": 1500, "position": {"x": 2, "y": 2}, 
                 "state": {
                     "state": "working", 
-                    "task": { "ini": {"x": 1, "y" : 1}, "fin": {"x": 1, "y" : 1}, "ID": 1 }, 
-                    "route": [{"x": 1, "y" : 1},{"x": 1, "y" : 1},{"x": 1, "y" : 1}]
+                    "task": { "ini": {"x": 1, "y" : 1}, "fin": {"x": 1, "y" : 5}, "ID": 1 }, 
+                    "route": [{"x": 1, "y" : 1},{"x": 1, "y" : 2},{"x": 1, "y" : 3}]
                 },
                 "tasks": []}
             ]

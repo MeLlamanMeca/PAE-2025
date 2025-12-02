@@ -278,10 +278,10 @@ function initialize(content: any) {
       const robotId = String(robot.ID)
       newRobotsList.push(robotId)
       
-      // Position
+
       if (robot.position) {
-        newRobotPositions[robotId] = [robot.position.y, robot.position.x]
-        robotInitialPositions.value[robotId] = [robot.position.y, robot.position.x]
+        newRobotPositions[robotId] = [robot.position.x, robot.position.y]
+        robotInitialPositions.value[robotId] = [robot.position.x, robot.position.y]
       }
 
       // Tasks
@@ -457,9 +457,10 @@ function handleSetActiveTask(content: any) {
 function handleMoveRobot(content: any) {
   console.log('Handling moveRobot:', content)
   // content: { robotID, position: {x, y} }
+  // x es fila, y es columna
   const robotId = String(content.robotID)
   if (content.position) {
-    robotPositions.value[robotId] = [content.position.y, content.position.x]
+    robotPositions.value[robotId] = [content.position.x, content.position.y]
   }
 }
 

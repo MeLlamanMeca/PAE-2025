@@ -272,8 +272,8 @@ const poiList = computed<POI[]>(() => {
       id: String(poi.id),
       name: poi.name || `POI ${poi.id}`,
       location: {
-        row: poi.position?.y || 0,
-        col: poi.position?.x || 0
+        row: poi.position?.x || 0,  // x es fila
+        col: poi.position?.y || 0   // y es columna
       },
       color: poi.color || '#cccccc'
     }))
@@ -341,8 +341,8 @@ function savePOI() {
       type: poiForm.value.type,
       name: poiForm.value.name,
       position: {
-        x: poiForm.value.location.col,
-        y: poiForm.value.location.row
+        x: poiForm.value.location.row,  // x es fila
+        y: poiForm.value.location.col   // y es columna
       },
       color: color
     })
@@ -358,8 +358,8 @@ function deletePOI(poiId: string) {
     if (poi) {
       emit('delete-poi', {
         position: {
-          x: poi.location.col,
-          y: poi.location.row
+          x: poi.location.row,  // x es fila
+          y: poi.location.col   // y es columna
         }
       })
     }
