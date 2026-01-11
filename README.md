@@ -4,7 +4,7 @@
 
 Proyecto de Arquitectura de Software que implementa un sistema distribuido para la gestión y control de robots autónomos. El sistema consta de tres componentes principales:
 
-![Sara One Slide 1 (Logo)](presentation/mainmenu_gif.gif)
+![Sara One UI](presentation/mainmenu_gif.gif)
 
 - **Backend (C++)**: Servidor WebSocket que gestiona la lógica de negocio, mapas, tareas y estados de robots
 - **Frontend (Vue. js)**: Interfaz web interactiva para visualización y control
