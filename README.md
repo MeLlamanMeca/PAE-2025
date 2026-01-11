@@ -14,7 +14,7 @@ Proyecto de Arquitectura de Software que implementa un sistema distribuido para 
 
 ```
 ┌─────────────┐         WebSocket          ┌─────────────┐
-│   Frontend  │◄─────────────────────────►│   Backend   │
+│   Frontend  │◄──────────────────────────►│   Backend   │
 │   (Vue.js)  │      ws://localhost:8080   │    (C++)    │
 └─────────────┘                            └──────┬──────┘
                                                   │
@@ -245,3 +245,4 @@ Para preguntas o sugerencias, por favor abre un [issue](https://github.com/MeLla
 ---
 
 ⭐ Si este proyecto te fue útil, considera darle una estrella en GitHub
+
