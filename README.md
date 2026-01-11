@@ -1,4 +1,4 @@
-![Sara One Slide 1 (Logo)](presentation/1.png)
+![Sara One Slide 1 (Logo)](presentation/16.png)
 
 ## 📋 Descripción
 
