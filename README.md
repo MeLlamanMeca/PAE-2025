@@ -1,14 +1,14 @@
-# PAE-2025
-
-Sistema de gestión y control de robots mediante arquitectura cliente-servidor con comunicación WebSocket en tiempo real.
+![Sara One Slide 1 (Logo)](presentation/1.png)
 
 ## 📋 Descripción
 
 Proyecto de Arquitectura de Software que implementa un sistema distribuido para la gestión y control de robots autónomos. El sistema consta de tres componentes principales:
 
+![Sara One Slide 1 (Logo)](presentation/mainmenu_gif.gif)
+
 - **Backend (C++)**: Servidor WebSocket que gestiona la lógica de negocio, mapas, tareas y estados de robots
 - **Frontend (Vue. js)**: Interfaz web interactiva para visualización y control
-- **Router (Python)**: Simulador de clientes robot que se conectan al servidor
+- **Router (Python)**: Simulador de movimiento de los robots que se comunica con el backend
 
 ## 🏗️ Arquitectura
 
@@ -96,7 +96,7 @@ npm run dev
 npm run build
 ```
 
-### Router (Simulador de Robot)
+### Router (Simulador de Movimiento de Robots)
 
 ```bash
 cd router
@@ -128,7 +128,7 @@ npm run dev
 
 La interfaz web estará disponible en `http://localhost:5173` (puerto por defecto de Vite)
 
-### 3. Conectar un Robot (opcional)
+### 3. Conectar el Simulador de Movimiento de Robots (opcional)
 
 ```bash
 cd router
@@ -136,30 +136,6 @@ python RobotRouter. py
 ```
 
 El simulador enviará mensajes de heartbeat cada segundo y escuchará respuestas del servidor.
-
-## 📡 Protocolo de Comunicación
-
-### Mensaje de Inicialización (Cliente → Servidor)
-
-```json
-{
-  "type": "ini",
-  "content": {
-    "mapID":  1
-  }
-}
-```
-
-### Mensaje de Heartbeat (Cliente → Servidor)
-
-```json
-{
-  "type": "heartbeat",
-  "id": 1,
-  "timestamp": 1234567890.123,
-  "sequence": 42
-}
-```
 
 ## 📁 Estructura del Proyecto
 
